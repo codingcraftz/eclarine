@@ -1,13 +1,7 @@
 import { useEffect, useState } from "react";
 import { PaginationNext, PaginationPrev } from "@/svg";
 
-const Pagination = ({
-  items = [],
-  countOfPage = 12,
-  paginatedData,
-  currPage,
-  setCurrPage,
-}) => {
+const Pagination = ({ items = [], countOfPage = 12, paginatedData, currPage, setCurrPage }) => {
   const pageStart = (currPage - 1) * countOfPage;
   const totalPage = Math.ceil(items.length / countOfPage);
 
@@ -22,7 +16,7 @@ const Pagination = ({
 
   useEffect(() => {
     paginatedData(items, pageStart, countOfPage);
-  }, [items, pageStart, countOfPage]);
+  }, [items, pageStart, countOfPage, paginatedData]);
 
   return (
     <nav>
@@ -31,9 +25,7 @@ const Pagination = ({
           <li>
             <button
               onClick={() => setPage(currPage - 1)}
-              className={`tp-pagination-prev prev page-numbers ${
-                currPage === 1 && "disabled"
-              }`}
+              className={`tp-pagination-prev prev page-numbers ${currPage === 1 && "disabled"}`}
             >
               <PaginationPrev />
             </button>
@@ -48,9 +40,7 @@ const Pagination = ({
           <li>
             <button
               onClick={() => setPage(currPage + 1)}
-              className={`next page-numbers ${
-                currPage === totalPage ? "disabled" : ""
-              }`}
+              className={`next page-numbers ${currPage === totalPage ? "disabled" : ""}`}
             >
               <PaginationNext />
             </button>

@@ -21,9 +21,9 @@ const PrivacyPolicy = () => {
                 <div className="tp-about-content mb-40">
                   <h3 className="tp-about-title mb-20">개인정보처리방침</h3>
                   <p className="mb-30">
-                    구름섬컴퍼니(이하 "회사")가 운영하는 에끌라린(이하 "서비스")은 개인정보보호법에
-                    따라 이용자의 개인정보 보호 및 권익을 보호하고자 다음과 같이 개인정보처리방침을
-                    수립·공개합니다.
+                    구름섬컴퍼니(이하 &quot;회사&quot;)가 운영하는 에끌라린(이하
+                    &quot;서비스&quot;)은 개인정보보호법에 따라 이용자의 개인정보 보호 및 권익을
+                    보호하고자 다음과 같이 개인정보처리방침을 수립·공개합니다.
                   </p>
                   <div className="tp-about-info">
                     <ul>

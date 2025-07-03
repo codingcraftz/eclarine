@@ -420,7 +420,7 @@ export const recommended_tags = [
   { name: "미니멀", color: "#54A0FF" },
 ];
 
-export default {
+const accessoryData = {
   accessory_categories,
   product_types,
   accessory_brands,
@@ -428,3 +428,5 @@ export default {
   popular_searches,
   recommended_tags,
 };
+
+export default accessoryData;
