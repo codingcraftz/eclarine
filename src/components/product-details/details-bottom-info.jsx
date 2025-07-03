@@ -1,30 +1,29 @@
 import React from "react";
 import Image from "next/image";
-import payment_option_img from '@assets/img/product/icons/payment-option.png';
+import payment_option_img from "@assets/img/product/icons/payment-option.png";
 
-const DetailsBottomInfo = ({sku,category,tag}) => {
+const DetailsBottomInfo = ({ sku, category, tag }) => {
   return (
     <>
       {/* product-details-query */}
       <div className="tp-product-details-query">
         <div className="tp-product-details-query-item d-flex align-items-center">
-          <span>SKU: </span>
+          <span>상품코드: </span>
           <p>{sku}</p>
         </div>
         <div className="tp-product-details-query-item d-flex align-items-center">
-          <span>Category: </span>
+          <span>카테고리: </span>
           <p>{category}</p>
         </div>
         <div className="tp-product-details-query-item d-flex align-items-center">
-          <span>Tag: </span>
+          <span>태그: </span>
           <p>{tag}</p>
         </div>
       </div>
 
-      {/*  product-details-social*/}
-
+      {/* product-details-social */}
       <div className="tp-product-details-social">
-        <span>Share: </span>
+        <span>공유하기: </span>
         <a href="#">
           <i className="fa-brands fa-facebook-f"></i>
         </a>
@@ -40,19 +39,24 @@ const DetailsBottomInfo = ({sku,category,tag}) => {
       </div>
 
       {/* product-details-msg */}
-
       <div className="tp-product-details-msg mb-15">
         <ul>
-          <li>30 days easy returns</li>
-          <li>Order yours before 2.30pm for same day dispatch</li>
+          <li>✅ 8만원 이상 무료배송</li>
+          <li>✅ 평일 12시 이전 주문시 당일 발송</li>
         </ul>
       </div>
+
       {/* product-details-payment */}
       <div className="tp-product-details-payment d-flex align-items-center flex-wrap justify-content-between">
         <p>
-          Guaranteed safe <br /> & secure checkout
+          안전하고 간편한 <br />
+          토스페이먼츠 결제
         </p>
-        <Image src={payment_option_img} alt="payment_option_img" />
+        <div className="tp-payment-methods">
+          <span className="payment-badge">💳 신용카드</span>
+          <span className="payment-badge">🏦 계좌이체</span>
+          <span className="payment-badge">📱 간편결제</span>
+        </div>
       </div>
     </>
   );

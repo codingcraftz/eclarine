@@ -65,7 +65,11 @@ export const accessory_products = [
       { id: 2, rating: 5, comment: "진주가 고급스러워 보입니다" },
       { id: 3, rating: 4, comment: "착용감이 편해요" },
     ],
-    imageURLs: ["/assets/items/1.jpeg"],
+    imageURLs: [
+      { img: "/assets/items/1.jpeg" },
+      { img: "/assets/items/1.jpeg" },
+      { img: "/assets/items/1.jpeg" },
+    ],
     attributes: {
       material: "올실버 (All Silver)",
       size: "12mm",
@@ -101,7 +105,11 @@ export const accessory_products = [
       { id: 2, rating: 5, comment: "매일 착용하고 있어요" },
       { id: 3, rating: 5, comment: "선물로 주기에도 좋아요" },
     ],
-    imageURLs: ["/assets/items/2.jpeg"],
+    imageURLs: [
+      { img: "/assets/items/2.jpeg" },
+      { img: "/assets/items/2.jpeg" },
+      { img: "/assets/items/2.jpeg" },
+    ],
     attributes: {
       material: "올실버 (All Silver)",
       length: "45cm (조절 가능)",
@@ -137,7 +145,11 @@ export const accessory_products = [
       { id: 2, rating: 4, comment: "고급스러운 느낌이에요" },
       { id: 3, rating: 5, comment: "플래티넘 도금이 고급스럽습니다" },
     ],
-    imageURLs: ["/assets/items/3.jpeg"],
+    imageURLs: [
+      { img: "/assets/items/3.jpeg" },
+      { img: "/assets/items/3.jpeg" },
+      { img: "/assets/items/3.jpeg" },
+    ],
     attributes: {
       material: "올실버 (All Silver) / 플래티넘 도금",
       length: "17cm (조절 가능)",
@@ -173,7 +185,11 @@ export const accessory_products = [
       { id: 2, rating: 4, comment: "작고 깔끔해서 좋아요" },
       { id: 3, rating: 5, comment: "매일 착용하기 좋습니다" },
     ],
-    imageURLs: ["/assets/items/4.jpeg"],
+    imageURLs: [
+      { img: "/assets/items/4.jpeg" },
+      { img: "/assets/items/4.jpeg" },
+      { img: "/assets/items/4.jpeg" },
+    ],
     attributes: {
       material: "올실버 (All Silver)",
       size: "8mm",
@@ -201,19 +217,22 @@ export const accessory_products = [
     status: "active",
     quantity: 60,
     is_featured: true,
-    is_popular: true,
+    is_popular: false,
     is_bestseller: false,
-    rating: 4.8,
+    rating: 4.5,
     reviews: [
-      { id: 1, rating: 5, comment: "하트 디자인이 로맨틱해요" },
-      { id: 2, rating: 5, comment: "보석이 반짝반짝 예뻐요" },
-      { id: 3, rating: 4, comment: "선물로 받았는데 너무 좋아요" },
+      { id: 1, rating: 5, comment: "하트 모양이 사랑스러워요" },
+      { id: 2, rating: 4, comment: "큐빅이 반짝반짝 예뻐요" },
+      { id: 3, rating: 4, comment: "선물로 받고 너무 기뻐요" },
     ],
-    imageURLs: ["/assets/items/5.jpeg"],
+    imageURLs: [
+      { img: "/assets/items/5.jpeg" },
+      { img: "/assets/items/5.jpeg" },
+      { img: "/assets/items/5.jpeg" },
+    ],
     attributes: {
       material: "올실버 (All Silver)",
-      gem: "큐빅 지르코니아",
-      size: "10mm",
+      size: "10mm x 12mm",
       weight: "2.1g",
       care: "실버 전용 클리너 사용",
     },
