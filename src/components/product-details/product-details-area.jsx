@@ -6,7 +6,7 @@ import DetailsTabNav from "./details-tab-nav";
 import RelatedProducts from "./related-products";
 
 const ProductDetailsArea = ({ productItem }) => {
-  const { _id, img, imageURLs, videoId,status } = productItem || {};
+  const { _id, img, imageURLs, videoId, status } = productItem || {};
   const [activeImg, setActiveImg] = useState(img);
   const dispatch = useDispatch();
   // active image change when img change
@@ -67,8 +67,8 @@ const ProductDetailsArea = ({ productItem }) => {
         <div className="container">
           <div className="row">
             <div className="tp-section-title-wrapper-6 text-center mb-40">
-              <span className="tp-section-title-pre-6">Next day Products</span>
-              <h3 className="tp-section-title-6">Related Products</h3>
+              <span className="tp-section-title-pre-6">추천 상품</span>
+              <h3 className="tp-section-title-6">이런 상품은 어떠세요?</h3>
             </div>
           </div>
           <div className="row">

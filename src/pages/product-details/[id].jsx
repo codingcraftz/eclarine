@@ -5,22 +5,20 @@ import HeaderTwo from "@/layout/headers/header-2";
 import FooterSimple from "@/layout/footers/footer-simple";
 import Wrapper from "@/layout/wrapper";
 import ErrorMsg from "@/components/common/error-msg";
-import { useGetProductQuery } from "@/redux/features/productApi";
+import { accessory_products } from "@/data/accessory-data";
 import ProductDetailsBreadcrumb from "@/components/breadcrumb/product-details-breadcrumb";
 import ProductDetailsArea from "@/components/product-details/product-details-area";
-import PrdDetailsLoader from "@/components/loader/prd-details-loader";
 
 const ProductDetailsPage = ({ query }) => {
-  const { data: product, isLoading, isError } = useGetProductQuery(query.id);
+  // MOCK 데이터에서 상품 찾기
+  const product = accessory_products.find((p) => p._id.toString() === query.id);
+
   // decide what to render
   let content = null;
-  if (isLoading) {
-    content = <PrdDetailsLoader loading={isLoading} />;
-  }
-  if (!isLoading && isError) {
-    content = <ErrorMsg msg="There was an error" />;
-  }
-  if (!isLoading && !isError && product) {
+
+  if (!product) {
+    content = <ErrorMsg msg="상품을 찾을 수 없습니다" />;
+  } else {
     content = (
       <>
         <ProductDetailsBreadcrumb category={product.category.name} title={product.title} />
@@ -28,6 +26,7 @@ const ProductDetailsPage = ({ query }) => {
       </>
     );
   }
+
   return (
     <Wrapper>
       <SEO pageTitle="Product Details" />
