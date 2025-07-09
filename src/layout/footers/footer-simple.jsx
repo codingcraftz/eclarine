@@ -75,26 +75,43 @@ const FooterSimple = () => {
           {/* 구분선 */}
           <hr style={{ margin: "20px 0", borderColor: "#e0e0e0" }} />
 
-          {/* 하단 회사정보 */}
+          {/* 하단 사업자 정보 */}
           <div className="row">
             <div className="col-12">
-              <div style={{ fontSize: "13px", color: "#666", lineHeight: "1.6" }}>
-                <div className="mb-2">
-                  <strong>구름섬컴퍼니</strong> 대표자 박준영 이메일
-                  <a href="mailto:9851248@gmail.com" style={{ color: "#666" }}>
-                    {" "}
+              <div
+                style={{
+                  fontSize: "13px",
+                  color: "#888",
+                  lineHeight: "1.5",
+                  textAlign: "center",
+                }}
+              >
+                <div className="mb-1">
+                  구름섬컴퍼니 | 대표자: 박준영 | 대표전화: 010-7941-9600 | 이메일:
+                  <a
+                    href="mailto:9851248@gmail.com"
+                    style={{ color: "#888", textDecoration: "none" }}
+                  >
                     9851248@gmail.com
                   </a>
-                  사업자번호 632-07-03327 통신판매업신고번호 2025-화도수동-0427
+                </div>
+                <div className="mb-1">
+                  사업자등록번호: 632-07-03327 | 통신판매업신고번호: 2025-화도수동-0427
                 </div>
                 <div className="mb-2">
-                  주소 [12175] 경기 남양주시 화도읍 마석중앙로37번길 45 (마석우리, 별나라프라자)
+                  주소: [12175] 경기 남양주시 화도읍 마석중앙로37번길 45 (마석우리, 별나라프라자)
                   504호
                 </div>
                 <div
-                  style={{ marginTop: "15px", paddingTop: "15px", borderTop: "1px solid #e0e0e0" }}
+                  style={{
+                    marginTop: "10px",
+                    paddingTop: "10px",
+                    borderTop: "1px solid #e0e0e0",
+                    fontSize: "13px",
+                    color: "#666",
+                  }}
                 >
-                  <span style={{ color: "#333" }}>Copyright © 에끌라린. All Rights Reserved.</span>
+                  Copyright © 에끌라린. All Rights Reserved.
                 </div>
               </div>
             </div>

@@ -134,7 +134,7 @@ const Footer = ({ style_2 = false, style_3 = false, primary_style = false }) => 
                         </div>
                         <div className="tp-footer-contact-content">
                           <p>
-                            <a href="tel:02-1234-5678">02-1234-5678</a>
+                            <a href="tel:010-7941-9600">010-7941-9600</a>
                           </p>
                         </div>
                       </div>
@@ -163,14 +163,195 @@ const Footer = ({ style_2 = false, style_3 = false, primary_style = false }) => 
         </div>
         <div className="tp-footer-bottom">
           <div className="container">
+            {/* 사업자 정보 섹션 */}
+            <div
+              className="tp-footer-business-info py-4"
+              style={{ backgroundColor: "#f8f9fa", borderRadius: "8px", marginBottom: "20px" }}
+            >
+              <div className="row">
+                <div className="col-12">
+                  <h5
+                    className="text-center mb-4"
+                    style={{ color: "#495057", fontWeight: "600", fontSize: "16px" }}
+                  >
+                    사업자 정보
+                  </h5>
+                  <div className="tp-footer-business-content">
+                    <div className="row g-3">
+                      {/* 첫 번째 줄 */}
+                      <div className="col-lg-3 col-md-6 col-12">
+                        <div
+                          className="tp-footer-business-item p-3"
+                          style={{
+                            backgroundColor: "white",
+                            borderRadius: "6px",
+                            border: "1px solid #e9ecef",
+                          }}
+                        >
+                          <div className="d-flex align-items-center">
+                            <i
+                              className="fa-solid fa-building me-2"
+                              style={{ color: "#6c757d", fontSize: "14px" }}
+                            ></i>
+                            <div>
+                              <div className="tp-footer-business-label mb-1">회사명</div>
+                              <div className="tp-footer-business-value">구름섬컴퍼니</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="col-lg-3 col-md-6 col-12">
+                        <div
+                          className="tp-footer-business-item p-3"
+                          style={{
+                            backgroundColor: "white",
+                            borderRadius: "6px",
+                            border: "1px solid #e9ecef",
+                          }}
+                        >
+                          <div className="d-flex align-items-center">
+                            <i
+                              className="fa-solid fa-user me-2"
+                              style={{ color: "#6c757d", fontSize: "14px" }}
+                            ></i>
+                            <div>
+                              <div className="tp-footer-business-label mb-1">대표자</div>
+                              <div className="tp-footer-business-value">박준영</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="col-lg-3 col-md-6 col-12">
+                        <div
+                          className="tp-footer-business-item p-3"
+                          style={{
+                            backgroundColor: "white",
+                            borderRadius: "6px",
+                            border: "1px solid #e9ecef",
+                          }}
+                        >
+                          <div className="d-flex align-items-center">
+                            <i
+                              className="fa-solid fa-phone me-2"
+                              style={{ color: "#6c757d", fontSize: "14px" }}
+                            ></i>
+                            <div>
+                              <div className="tp-footer-business-label mb-1">대표전화</div>
+                              <div className="tp-footer-business-value">010-7941-9600</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="col-lg-3 col-md-6 col-12">
+                        <div
+                          className="tp-footer-business-item p-3"
+                          style={{
+                            backgroundColor: "white",
+                            borderRadius: "6px",
+                            border: "1px solid #e9ecef",
+                          }}
+                        >
+                          <div className="d-flex align-items-center">
+                            <i
+                              className="fa-solid fa-envelope me-2"
+                              style={{ color: "#6c757d", fontSize: "14px" }}
+                            ></i>
+                            <div>
+                              <div className="tp-footer-business-label mb-1">이메일</div>
+                              <div className="tp-footer-business-value">
+                                <a
+                                  href="mailto:9851248@gmail.com"
+                                  style={{ color: "#007bff", textDecoration: "none" }}
+                                >
+                                  9851248@gmail.com
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 두 번째 줄 */}
+                      <div className="col-lg-4 col-md-6 col-12">
+                        <div
+                          className="tp-footer-business-item p-3"
+                          style={{
+                            backgroundColor: "white",
+                            borderRadius: "6px",
+                            border: "1px solid #e9ecef",
+                          }}
+                        >
+                          <div className="d-flex align-items-center">
+                            <i
+                              className="fa-solid fa-file-text me-2"
+                              style={{ color: "#6c757d", fontSize: "14px" }}
+                            ></i>
+                            <div>
+                              <div className="tp-footer-business-label mb-1">사업자등록번호</div>
+                              <div className="tp-footer-business-value">632-07-03327</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="col-lg-4 col-md-6 col-12">
+                        <div
+                          className="tp-footer-business-item p-3"
+                          style={{
+                            backgroundColor: "white",
+                            borderRadius: "6px",
+                            border: "1px solid #e9ecef",
+                          }}
+                        >
+                          <div className="d-flex align-items-center">
+                            <i
+                              className="fa-solid fa-shopping-cart me-2"
+                              style={{ color: "#6c757d", fontSize: "14px" }}
+                            ></i>
+                            <div>
+                              <div className="tp-footer-business-label mb-1">통신판매업신고</div>
+                              <div className="tp-footer-business-value">2025-화도수동-0427</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="col-lg-4 col-md-12 col-12">
+                        <div
+                          className="tp-footer-business-item p-3"
+                          style={{
+                            backgroundColor: "white",
+                            borderRadius: "6px",
+                            border: "1px solid #e9ecef",
+                          }}
+                        >
+                          <div className="d-flex align-items-center">
+                            <i
+                              className="fa-solid fa-server me-2"
+                              style={{ color: "#6c757d", fontSize: "14px" }}
+                            ></i>
+                            <div>
+                              <div className="tp-footer-business-label mb-1">호스팅서비스</div>
+                              <div className="tp-footer-business-value">Vercel Inc.</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 기존 저작권 및 결제 정보 */}
             <div className="tp-footer-bottom-wrapper">
               <div className="row align-items-center">
                 <div className="col-md-6">
                   <div className="tp-footer-copyright">
-                    <p>
-                      © {new Date().getFullYear()} 에끌라린 (구름섬컴퍼니). All Rights Reserved |
-                      대표자: 박준영 | 사업자번호: 632-07-03327 | 통신판매업: 2025-화도수동-0427
-                    </p>
+                    <p>© {new Date().getFullYear()} 에끌라린. All Rights Reserved.</p>
                   </div>
                 </div>
                 <div className="col-md-6">

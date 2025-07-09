@@ -30,7 +30,7 @@ const SEO = ({ pageTitle }) => (
       />
       <meta
         property="og:image"
-        content="https://opengraph.b-cdn.net/production/images/7f6b58f0-42b6-4e99-b428-83028e374975.png?token=j4qUmFRbbfId41PknHGETICtyNp_qHruYT3uFm0OM2s&height=500&width=500&expires=33287513715"
+        content="https://www.eclarine.kr/assets/img/logo/eclarine-og-image.png"
       />
 
       {/* Twitter Meta Tags */}
@@ -47,7 +47,7 @@ const SEO = ({ pageTitle }) => (
       />
       <meta
         name="twitter:image"
-        content="https://opengraph.b-cdn.net/production/images/7f6b58f0-42b6-4e99-b428-83028e374975.png?token=j4qUmFRbbfId41PknHGETICtyNp_qHruYT3uFm0OM2s&height=500&width=500&expires=33287513715"
+        content="https://www.eclarine.kr/assets/img/logo/eclarine-og-image.png"
       />
 
       <link rel="icon" href="/favicon.png" />
