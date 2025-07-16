@@ -495,3 +495,26 @@ USING (bucket_id = 'product-images' AND auth.role() = 'authenticated');
 2. **일관된 데이터 구조**: 모든 컴포넌트가 동일한 필드명 사용
 3. **효율적인 할인 시스템**: compare_price 기반 할인율 자동 계산
 4. **확장 가능한 구조**: 새로운 상품 필드 추가 용이
+
+## order_form (주문서)
+
+- 별도의 주문서 관리용 테이블 (에끌라린 기존 앱과 별개)
+- 주문 상태: 결제확인대기, 결제확인, 발송준비, 발송완료 등
+- 캡쳐사진은 Supabase Storage의 order-captures 버킷에 저장
+
+| 컬럼명         | 타입        | 설명              |
+| -------------- | ----------- | ----------------- |
+| id             | uuid        | PK, 자동생성      |
+| created_at     | timestamptz | 생성일시          |
+| nickname       | text        | 유튜브 닉네임     |
+| name           | text        | 이름              |
+| phone          | text        | 전화번호          |
+| address        | text        | 주소              |
+| address_detail | text        | 상세주소          |
+| payment        | text        | 결제방법          |
+| request        | text        | 요청사항          |
+| status         | text        | 주문상태          |
+| capture_urls   | jsonb       | 캡쳐사진 URL 배열 |
+
+- status: '결제확인대기', '결제확인', '발송준비', '발송완료' 등
+- capture_urls: ["url1", "url2", ...]

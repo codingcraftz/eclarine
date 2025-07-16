@@ -604,4 +604,17 @@ export const supabaseService = {
       throw error;
     }
   },
+
+  // 주문서용 캡쳐사진 업로드
+  async uploadOrderCaptures(files) {
+    // order-captures 버킷, order-forms 폴더에 저장
+    return this.uploadMultipleImages(files, "order-captures", "order-forms");
+  },
+
+  // 주문서(order_form) 생성
+  async createOrderForm(orderData) {
+    const { data, error } = await supabase.from("order_form").insert([orderData]).select().single();
+    if (error) throw error;
+    return data;
+  },
 };
