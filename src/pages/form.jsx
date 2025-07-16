@@ -431,25 +431,55 @@ const FormPage = () => {
                 <div
                   style={{
                     fontSize: 15,
-                    color: "#444",
+                    color: "#3C1E1E",
                     marginBottom: 16,
-                    background: "#f9f7f3",
-                    borderRadius: 8,
-                    padding: 12,
+                    background: "#FEE500",
+                    borderRadius: 10,
+                    padding: 16,
+                    fontWeight: 500,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
                   }}
                 >
-                  <b>카드결제 안내</b>
-                  <br />
-                  <span>
-                    <a
-                      href="http://pf.kakao.com/_qxcWrn/chat"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ color: "#3C1E1E", textDecoration: "underline" }}
-                    >
-                      카카오톡 상담 바로가기
-                    </a>
-                    <br />위 링크에서 <b>성함/금액</b>을 남겨주시면
+                  <span
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 700,
+                      marginBottom: 6,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <span role="img" aria-label="kakao" style={{ fontSize: 22 }}>
+                      🟡
+                    </span>
+                    카카오톡 카드결제 안내
+                  </span>
+                  <a
+                    href="http://pf.kakao.com/_qxcWrn/chat"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-block",
+                      background: "#3C1E1E",
+                      color: "#FEE500",
+                      borderRadius: 6,
+                      fontWeight: 700,
+                      fontSize: 16,
+                      padding: "8px 18px",
+                      margin: "10px 0 8px 0",
+                      textDecoration: "none",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                      letterSpacing: 0.5,
+                    }}
+                  >
+                    카카오톡으로 결제링크 요청하기
+                  </a>
+                  <span style={{ fontSize: 15, color: "#3C1E1E", fontWeight: 400 }}>
+                    위 버튼에서 <b>성함/금액</b>을 남겨주시면
                     <br />
                     빠르게 결제 링크를 전송드리겠습니다!
                   </span>
