@@ -560,6 +560,32 @@ const FormPage = () => {
           오기재로 인한 오배송은 고객님 부담으로 처리됩니다.
           <br />
         </div>
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
+          <a
+            href="http://pf.kakao.com/_qxcWrn/chat"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              background: "#FEE500",
+              color: "#3C1E1E",
+              fontWeight: 700,
+              fontSize: 17,
+              borderRadius: 8,
+              padding: "12px 28px",
+              textDecoration: "none",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              letterSpacing: 0.2,
+            }}
+          >
+            <span role="img" aria-label="kakao" style={{ fontSize: 22 }}>
+              🟡
+            </span>
+            에끌라린 카카오톡 문의하기
+          </a>
+        </div>
         <style jsx global>{`
           .phone-input::placeholder {
             color: #bbb !important;
