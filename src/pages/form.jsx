@@ -213,25 +213,6 @@ const FormPage = () => {
           {errors.address && <div style={{ color: "red", fontSize: 13 }}>{errors.address}</div>}
         </div>
         <div style={{ marginBottom: 16 }}>
-          <label>금액 *</label>
-          <input
-            name="amount"
-            value={form.amount}
-            onChange={(e) => {
-              // 숫자만 입력
-              const v = e.target.value.replace(/[^0-9]/g, "");
-              setForm({ ...form, amount: v });
-            }}
-            className="form-control amount-input"
-            placeholder="예시: 50000"
-            inputMode="numeric"
-          />
-          <div style={{ color: "#888", fontSize: 13, marginTop: 2 }}>
-            주문 금액을 숫자로 입력해 주세요.
-          </div>
-          {errors.amount && <div style={{ color: "red", fontSize: 13 }}>{errors.amount}</div>}
-        </div>
-        <div style={{ marginBottom: 16 }}>
           <label>캡쳐사진(다중 업로드) *</label>
           <input
             type="file"
@@ -288,6 +269,25 @@ const FormPage = () => {
               ))}
             </div>
           )}
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <label>금액 *</label>
+          <input
+            name="amount"
+            value={form.amount}
+            onChange={(e) => {
+              // 숫자만 입력
+              const v = e.target.value.replace(/[^0-9]/g, "");
+              setForm({ ...form, amount: v });
+            }}
+            className="form-control amount-input"
+            placeholder="예시: 50000"
+            inputMode="numeric"
+          />
+          <div style={{ color: "#888", fontSize: 13, marginTop: 2 }}>
+            주문 금액을 숫자로 입력해 주세요.
+          </div>
+          {errors.amount && <div style={{ color: "red", fontSize: 13 }}>{errors.amount}</div>}
         </div>
         <div style={{ marginBottom: 16 }}>
           <label>결제 방법 *</label>
