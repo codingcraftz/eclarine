@@ -28,6 +28,19 @@ const paymentOptions = [
   },
 ];
 
+// 계좌정보 상수 분리
+const accountInfo = {
+  bank: "카카오뱅크",
+  accountNumber: "3333164570159",
+  accountDisplay: "카카오뱅크 3333-16-4570159",
+  accountHolder: "박*영",
+  tossOrigin: "에끌라린주문서",
+  kakaoPayUrl: "https://qr.kakaopay.com/Ej9QfqGLl",
+};
+const tossUrl = `supertoss://send?bank=${encodeURIComponent(accountInfo.bank)}&accountNo=${
+  accountInfo.accountNumber
+}&origin=${encodeURIComponent(accountInfo.tossOrigin)}`;
+
 const FormPage = () => {
   const [form, setForm] = useState(initialState);
   const [showPostcode, setShowPostcode] = useState(false);
@@ -312,27 +325,7 @@ const FormPage = () => {
           {form.payment === "계좌이체" && (
             <div style={{ display: "flex", gap: 12, marginTop: 8, justifyContent: "flex-end" }}>
               <a
-                href="https://qr.kakaopay.com/Ej9QfqGLl"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  background: "#FEE500",
-                  color: "#3C1E1E",
-                  border: "none",
-                  borderRadius: 6,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  fontSize: 15,
-                  padding: "6px 14px",
-                  textDecoration: "none",
-                  display: "inline-block",
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                }}
-              >
-                카카오페이 송금
-              </a>
-              <a
-                href="supertoss://send?bank=카카오뱅크&accountNo=3333164570159&origin=에끌라린주문서"
+                href={tossUrl}
                 style={{
                   background: "#0064FF",
                   color: "#fff",
@@ -352,7 +345,7 @@ const FormPage = () => {
               <button
                 type="button"
                 onClick={() => {
-                  navigator.clipboard.writeText("카카오뱅크 3333-16-4570159");
+                  navigator.clipboard.writeText(accountInfo.accountDisplay);
                   notifySuccess("계좌번호가 복사되었습니다.");
                 }}
                 style={{
