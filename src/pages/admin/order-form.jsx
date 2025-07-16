@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabaseService, supabase } from "../../lib/supabase";
+import Lightbox from "yet-another-react-lightbox";
+import "yet-another-react-lightbox/styles.css";
 
 const statusOptions = [
   { value: "결제확인대기", label: "결제확인대기" },
@@ -66,6 +68,10 @@ const AdminOrderFormPage = () => {
   const filteredOrders =
     filterStatus === "전체" ? orders : orders.filter((o) => o.status === filterStatus);
   const [toast, setToast] = useState({ message: "", type: "success" });
+  // Lightbox 상태
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImages, setLightboxImages] = useState([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -245,6 +251,10 @@ const AdminOrderFormPage = () => {
             <span style={{ color: "#888" }}>{selectedOrder.address_detail}</span>
           </div>
           <div style={{ fontSize: 15, marginBottom: 8 }}>
+            <b>금액:</b>{" "}
+            {selectedOrder.amount ? Number(selectedOrder.amount).toLocaleString() + "원" : "-"}
+          </div>
+          <div style={{ fontSize: 15, marginBottom: 8 }}>
             <b>결제방법:</b> {selectedOrder.payment}
           </div>
           <div style={{ fontSize: 15, marginBottom: 8 }}>
@@ -280,17 +290,24 @@ const AdminOrderFormPage = () => {
                     overflow: "hidden",
                     border: "1px solid #eee",
                     background: "#fafafa",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => {
+                    setLightboxImages(selectedOrder.capture_urls.map((u) => ({ src: u })));
+                    setLightboxIndex(idx);
+                    setLightboxOpen(true);
                   }}
                 >
-                  <a href={url} target="_blank" rel="noopener noreferrer">
-                    <img
-                      src={url}
-                      alt="캡쳐"
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    />
-                  </a>
+                  <img
+                    src={url}
+                    alt="캡쳐"
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
                   <button
-                    onClick={() => handleImageDelete(url, idx)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleImageDelete(url, idx);
+                    }}
                     style={{
                       position: "absolute",
                       top: 2,
@@ -354,6 +371,9 @@ const AdminOrderFormPage = () => {
             {order.created_at?.slice(0, 16).replace("T", " ")}
           </div>
           <div style={{ marginBottom: 4 }}>
+            <b>금액:</b> {order.amount ? Number(order.amount).toLocaleString() + "원" : "-"}
+          </div>
+          <div style={{ marginBottom: 4 }}>
             <b>상태:</b>{" "}
             <select
               value={order.status}
@@ -396,11 +416,8 @@ const AdminOrderFormPage = () => {
             {order.capture_urls &&
               order.capture_urls.length > 0 &&
               order.capture_urls.map((url, idx) => (
-                <a
+                <div
                   key={idx}
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   style={{
                     display: "inline-block",
                     width: 48,
@@ -409,6 +426,12 @@ const AdminOrderFormPage = () => {
                     overflow: "hidden",
                     border: "1px solid #eee",
                     background: "#fafafa",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => {
+                    setLightboxImages(order.capture_urls.map((u) => ({ src: u })));
+                    setLightboxIndex(idx);
+                    setLightboxOpen(true);
                   }}
                 >
                   <img
@@ -416,7 +439,7 @@ const AdminOrderFormPage = () => {
                     alt="캡쳐"
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
-                </a>
+                </div>
               ))}
           </div>
           <div style={{ marginTop: 8 }}>
@@ -495,6 +518,7 @@ const AdminOrderFormPage = () => {
                 <th>결제방법</th>
                 <th>상태</th>
                 <th>캡쳐사진</th>
+                <th>금액</th>
                 <th>요청사항</th>
               </tr>
             </thead>
@@ -546,10 +570,23 @@ const AdminOrderFormPage = () => {
                   </td>
                   <td onClick={() => openOrderModal(order)}>
                     {order.capture_urls && order.capture_urls.length > 0 ? (
-                      <span>{order.capture_urls.length}장</span>
+                      <span
+                        style={{ textDecoration: "underline", color: "#0989FF", cursor: "pointer" }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLightboxImages(order.capture_urls.map((u) => ({ src: u })));
+                          setLightboxIndex(0);
+                          setLightboxOpen(true);
+                        }}
+                      >
+                        {order.capture_urls.length}장
+                      </span>
                     ) : (
                       <span style={{ color: "#aaa" }}>없음</span>
                     )}
+                  </td>
+                  <td onClick={() => openOrderModal(order)}>
+                    {order.amount ? Number(order.amount).toLocaleString() + "원" : "-"}
                   </td>
                   <td
                     style={{ maxWidth: 180, wordBreak: "break-all" }}
@@ -564,6 +601,13 @@ const AdminOrderFormPage = () => {
         </div>
       )}
       {showModal && renderOrderDetail()}
+      <Lightbox
+        open={lightboxOpen}
+        close={() => setLightboxOpen(false)}
+        slides={lightboxImages}
+        index={lightboxIndex}
+        styles={{ container: { zIndex: 30000 } }}
+      />
       <Toast
         message={toast.message}
         type={toast.type}

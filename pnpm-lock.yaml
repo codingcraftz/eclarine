@@ -110,6 +110,9 @@ importers:
       swiper:
         specifier: ^9.1.1
         version: 9.4.1
+      yet-another-react-lightbox:
+        specifier: ^3.24.0
+        version: 3.24.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       yup:
         specifier: ^1.1.1
         version: 1.6.1
@@ -2030,6 +2033,20 @@ packages:
       bufferutil:
         optional: true
       utf-8-validate:
+        optional: true
+
+  yet-another-react-lightbox@3.24.0:
+    resolution: {integrity: sha512-j3YtwDT+fdBBhxbaxfthHMehXkUj388rpn7knc934H86bJJDBEL/m9WFGdKq2ivT3GaUPF+41GplKFbAv8bOmg==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      '@types/react': ^16 || ^17 || ^18 || ^19
+      '@types/react-dom': ^16 || ^17 || ^18 || ^19
+      react: ^16.8.0 || ^17 || ^18 || ^19
+      react-dom: ^16.8.0 || ^17 || ^18 || ^19
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
         optional: true
 
   yocto-queue@0.1.0:
@@ -4171,6 +4188,11 @@ snapshots:
   wrappy@1.0.2: {}
 
   ws@8.18.3: {}
+
+  yet-another-react-lightbox@3.24.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
 
   yocto-queue@0.1.0: {}
 

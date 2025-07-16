@@ -13,6 +13,7 @@ const initialState = {
   payment: "계좌이체",
   request: "",
   files: [],
+  amount: "",
 };
 
 const paymentOptions = [
@@ -42,7 +43,19 @@ const FormPage = () => {
   // 입력값 변경
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    // 전화번호 자동 하이픈 처리
+    if (name === "phone") {
+      let onlyNum = value.replace(/[^0-9]/g, "").slice(0, 11);
+      let formatted = onlyNum;
+      if (onlyNum.length >= 3 && onlyNum.length <= 7) {
+        formatted = onlyNum.replace(/(\d{3})(\d{1,4})/, "$1-$2");
+      } else if (onlyNum.length > 7) {
+        formatted = onlyNum.replace(/(\d{3})(\d{4})(\d{1,4})/, "$1-$2-$3");
+      }
+      setForm({ ...form, [name]: formatted });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   // 파일 업로드 (여러 번 추가 가능)
@@ -70,6 +83,7 @@ const FormPage = () => {
     if (!form.address) newErrors.address = "주소를 입력해주세요.";
     if (form.files.length === 0) newErrors.files = "캡쳐사진을 업로드해주세요.";
     if (!form.payment) newErrors.payment = "결제 방법을 선택해주세요.";
+    if (!form.amount) newErrors.amount = "금액을 입력해주세요.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -98,6 +112,7 @@ const FormPage = () => {
         request: form.request,
         status: "결제확인대기",
         capture_urls: captureUrls,
+        amount: form.amount,
       };
       await supabaseService.createOrderForm(orderData);
       alert("주문이 정상적으로 접수되었습니다! (관리자가 확인 후 연락드릴 예정입니다)");
@@ -152,9 +167,12 @@ const FormPage = () => {
             name="phone"
             value={form.phone}
             onChange={handleChange}
-            className="form-control"
-            placeholder="010-1234-5678"
+            className="form-control phone-input"
+            placeholder="예시: 010-1234-5678"
           />
+          <div style={{ color: "#888", fontSize: 13, marginTop: 2 }}>
+            숫자만 입력해 주세요. 자동으로 -가 입력됩니다.
+          </div>
           {errors.phone && <div style={{ color: "red", fontSize: 13 }}>{errors.phone}</div>}
         </div>
         <div style={{ marginBottom: 16 }}>
@@ -192,6 +210,25 @@ const FormPage = () => {
             placeholder="상세주소"
           />
           {errors.address && <div style={{ color: "red", fontSize: 13 }}>{errors.address}</div>}
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <label>금액 *</label>
+          <input
+            name="amount"
+            value={form.amount}
+            onChange={(e) => {
+              // 숫자만 입력
+              const v = e.target.value.replace(/[^0-9]/g, "");
+              setForm({ ...form, amount: v });
+            }}
+            className="form-control amount-input"
+            placeholder="예시: 50000"
+            inputMode="numeric"
+          />
+          <div style={{ color: "#888", fontSize: 13, marginTop: 2 }}>
+            주문 금액을 숫자로 입력해 주세요.
+          </div>
+          {errors.amount && <div style={{ color: "red", fontSize: 13 }}>{errors.amount}</div>}
         </div>
         <div style={{ marginBottom: 16 }}>
           <label>캡쳐사진(다중 업로드) *</label>
@@ -352,6 +389,12 @@ const FormPage = () => {
         오기재로 인한 오배송은 고객님 부담으로 처리됩니다.
         <br />
       </div>
+      <style jsx global>{`
+        .phone-input::placeholder {
+          color: #bbb !important;
+          opacity: 1;
+        }
+      `}</style>
     </div>
   );
 };
