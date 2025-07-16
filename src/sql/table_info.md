@@ -518,3 +518,21 @@ USING (bucket_id = 'product-images' AND auth.role() = 'authenticated');
 
 - status: '결제확인대기', '결제확인', '발송준비', '발송완료' 등
 - capture_urls: ["url1", "url2", ...]
+
+## 2024-06-13 order_form 테이블 RLS 정책(모든 사용자 update/delete 허용)
+
+- 모든 사용자(anon, authenticated)에게 update, delete 허용
+
+```sql
+create policy "누구나 주문 수정 허용"
+on order_form
+for update
+to public
+using (true);
+
+create policy "누구나 주문 삭제 허용"
+on order_form
+for delete
+to public
+using (true);
+```

@@ -134,7 +134,7 @@ const Footer = ({ style_2 = false, style_3 = false, primary_style = false }) => 
                         </div>
                         <div className="tp-footer-contact-content">
                           <p>
-                            <a href="tel:010-7941-9600">010-7941-9600</a>
+                            <a href="tel:010-7977-1248">010-7977-1248</a>
                           </p>
                         </div>
                       </div>
@@ -239,7 +239,7 @@ const Footer = ({ style_2 = false, style_3 = false, primary_style = false }) => 
                             ></i>
                             <div>
                               <div className="tp-footer-business-label mb-1">대표전화</div>
-                              <div className="tp-footer-business-value">010-7941-9600</div>
+                              <div className="tp-footer-business-value">010-7977-1248</div>
                             </div>
                           </div>
                         </div>

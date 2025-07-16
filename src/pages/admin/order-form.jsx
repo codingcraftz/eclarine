@@ -48,6 +48,20 @@ const statusColor = {
   발송완료: "#4CAF50",
 };
 
+// 주문일 포맷 함수 추가
+function formatOrderDate(dateStr) {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  const yy = String(d.getFullYear()).slice(2);
+  const mm = d.getMonth() + 1;
+  const dd = d.getDate();
+  const hh = d.getHours();
+  const min = d.getMinutes();
+  return `${yy}. ${mm < 10 ? "0" + mm : mm}. ${dd}. ${hh < 10 ? "0" + hh : hh}:${
+    min < 10 ? "0" + min : min
+  }`;
+}
+
 const AdminOrderFormPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,13 +79,95 @@ const AdminOrderFormPage = () => {
     { value: "발송준비", label: "발송준비" },
     { value: "발송완료", label: "발송완료" },
   ];
-  const filteredOrders =
-    filterStatus === "전체" ? orders : orders.filter((o) => o.status === filterStatus);
+  // 정렬 및 검색 상태 추가
+  const [orderAsc, setOrderAsc] = useState(false); // false: 내림차순(최신순), true: 오름차순(과거순)
+  const [searchText, setSearchText] = useState("");
+
+  // 검색 및 정렬 적용된 주문 목록
+  const filteredOrders = (
+    filterStatus === "전체" ? orders : orders.filter((o) => o.status === filterStatus)
+  )
+    .filter((o) => {
+      if (!searchText.trim()) return true;
+      const q = searchText.trim().toLowerCase();
+      return (
+        (o.name && o.name.toLowerCase().includes(q)) ||
+        (o.nickname && o.nickname.toLowerCase().includes(q))
+      );
+    })
+    .sort((a, b) => {
+      if (orderAsc) {
+        return new Date(a.created_at) - new Date(b.created_at);
+      } else {
+        return new Date(b.created_at) - new Date(a.created_at);
+      }
+    });
   const [toast, setToast] = useState({ message: "", type: "success" });
   // Lightbox 상태
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImages, setLightboxImages] = useState([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  // 1. 주문 삭제 함수 추가
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm("정말 삭제하시겠습니까? 삭제 후 복구할 수 없습니다.")) return;
+    try {
+      const { error } = await supabase.from("order_form").delete().eq("id", orderId);
+      if (error) throw error;
+      setOrders((prev) => prev.filter((o) => o.id !== orderId));
+      setShowModal(false);
+      setToast({ message: "주문이 삭제되었습니다.", type: "success" });
+    } catch (err) {
+      setToast({ message: "삭제 중 오류 발생", type: "error" });
+    } finally {
+      setTimeout(() => setToast({ message: "", type: "success" }), 2000);
+    }
+  };
+
+  // 2. 주문 수정 상태 및 함수 추가
+  const [editMode, setEditMode] = useState(false);
+  const [editOrder, setEditOrder] = useState(null);
+
+  const startEditOrder = () => {
+    setEditOrder({ ...selectedOrder });
+    setEditMode(true);
+  };
+  const cancelEditOrder = () => {
+    setEditMode(false);
+    setEditOrder(null);
+  };
+  const handleEditInput = (e) => {
+    const { name, value } = e.target;
+    setEditOrder((prev) => ({ ...prev, [name]: value }));
+  };
+  const saveEditOrder = async () => {
+    if (!window.confirm("정말 수정하시겠습니까?")) return;
+    try {
+      const { error } = await supabase
+        .from("order_form")
+        .update({
+          nickname: editOrder.nickname,
+          name: editOrder.name,
+          phone: editOrder.phone,
+          address: editOrder.address,
+          address_detail: editOrder.address_detail,
+          payment: editOrder.payment,
+          request: editOrder.request,
+          amount: editOrder.amount,
+        })
+        .eq("id", editOrder.id);
+      if (error) throw error;
+      setOrders((prev) => prev.map((o) => (o.id === editOrder.id ? { ...o, ...editOrder } : o)));
+      setSelectedOrder((prev) => ({ ...prev, ...editOrder }));
+      setEditMode(false);
+      setEditOrder(null);
+      setToast({ message: "수정이 완료되었습니다.", type: "success" });
+    } catch (err) {
+      setToast({ message: "수정 중 오류 발생", type: "error" });
+    } finally {
+      setTimeout(() => setToast({ message: "", type: "success" }), 2000);
+    }
+  };
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -234,28 +330,90 @@ const AdminOrderFormPage = () => {
           <h3 style={{ color: "#BD844C", fontWeight: 700, fontSize: 20, marginBottom: 8 }}>
             주문 상세
           </h3>
-          <div style={{ fontSize: 15, marginBottom: 8 }}>
-            <b>주문일:</b> {selectedOrder.created_at?.slice(0, 16).replace("T", " ")}
+          <div style={{ fontSize: 15, marginBottom: 8, color: "#222" }}>
+            <b>주문일:</b> {formatOrderDate(selectedOrder.created_at)}
           </div>
           <div style={{ fontSize: 15, marginBottom: 8 }}>
-            <b>닉네임:</b> {selectedOrder.nickname}
+            <b>닉네임:</b>{" "}
+            {editMode ? (
+              <input name="nickname" value={editOrder.nickname ?? ""} onChange={handleEditInput} />
+            ) : (
+              selectedOrder.nickname
+            )}
           </div>
           <div style={{ fontSize: 15, marginBottom: 8 }}>
-            <b>이름:</b> {selectedOrder.name}
+            <b>이름:</b>{" "}
+            {editMode ? (
+              <input name="name" value={editOrder.name ?? ""} onChange={handleEditInput} />
+            ) : (
+              selectedOrder.name
+            )}
           </div>
           <div style={{ fontSize: 15, marginBottom: 8 }}>
-            <b>전화번호:</b> {selectedOrder.phone}
+            <b>전화번호:</b>{" "}
+            {editMode ? (
+              <input name="phone" value={editOrder.phone ?? ""} onChange={handleEditInput} />
+            ) : (
+              selectedOrder.phone
+            )}
           </div>
-          <div style={{ fontSize: 15, marginBottom: 8 }}>
-            <b>주소:</b> {selectedOrder.address}{" "}
-            <span style={{ color: "#888" }}>{selectedOrder.address_detail}</span>
+          <div style={{ fontSize: 15, marginBottom: 8, color: "#222" }}>
+            <b>주소:</b>{" "}
+            {editMode ? (
+              <>
+                <input
+                  name="address"
+                  value={editOrder.address ?? ""}
+                  onChange={handleEditInput}
+                  style={{ width: 180, fontSize: 15, color: "#222", fontWeight: 400 }}
+                />
+                <input
+                  name="address_detail"
+                  value={editOrder.address_detail ?? ""}
+                  onChange={handleEditInput}
+                  placeholder="상세주소"
+                  style={{
+                    marginLeft: 6,
+                    width: 100,
+                    fontSize: 15,
+                    color: "#222",
+                    fontWeight: 400,
+                  }}
+                />
+              </>
+            ) : (
+              <>
+                <span style={{ fontSize: 15, color: "#222", fontWeight: 400 }}>
+                  {selectedOrder.address}
+                </span>
+                {selectedOrder.address_detail && (
+                  <span style={{ marginLeft: 6, fontSize: 15, color: "#222", fontWeight: 400 }}>
+                    {selectedOrder.address_detail}
+                  </span>
+                )}
+              </>
+            )}
           </div>
           <div style={{ fontSize: 15, marginBottom: 8 }}>
             <b>금액:</b>{" "}
-            {selectedOrder.amount ? Number(selectedOrder.amount).toLocaleString() + "원" : "-"}
+            {editMode ? (
+              <input name="amount" value={editOrder.amount ?? ""} onChange={handleEditInput} />
+            ) : selectedOrder.amount ? (
+              Number(selectedOrder.amount).toLocaleString() + "원"
+            ) : (
+              "-"
+            )}
           </div>
           <div style={{ fontSize: 15, marginBottom: 8 }}>
-            <b>결제방법:</b> {selectedOrder.payment}
+            <b>결제방법:</b>{" "}
+            {editMode ? (
+              <select name="payment" value={editOrder.payment ?? ""} onChange={handleEditInput}>
+                <option value="계좌이체">계좌이체</option>
+                <option value="카드결제">카드결제</option>
+              </select>
+            ) : (
+              selectedOrder.payment
+            )}
           </div>
           <div style={{ fontSize: 15, marginBottom: 8 }}>
             <b>상태:</b>{" "}
@@ -272,7 +430,18 @@ const AdminOrderFormPage = () => {
             </select>
           </div>
           <div style={{ fontSize: 15, marginBottom: 8 }}>
-            <b>요청사항:</b> {selectedOrder.request || <span style={{ color: "#aaa" }}>없음</span>}
+            <b>요청사항:</b>{" "}
+            {editMode ? (
+              <textarea
+                name="request"
+                value={editOrder.request ?? ""}
+                onChange={handleEditInput}
+                rows={2}
+                style={{ width: 220 }}
+              />
+            ) : (
+              selectedOrder.request || <span style={{ color: "#aaa" }}>없음</span>
+            )}
           </div>
           <div style={{ fontSize: 15, marginBottom: 8 }}>
             <b>캡쳐사진:</b>
@@ -343,6 +512,75 @@ const AdminOrderFormPage = () => {
             {imgUploading && <div style={{ color: "#0989FF", fontSize: 13 }}>업로드 중...</div>}
             {imgError && <div style={{ color: "red", fontSize: 13 }}>{imgError}</div>}
           </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 16, justifyContent: "flex-end" }}>
+            {!editMode ? (
+              <>
+                <button
+                  onClick={startEditOrder}
+                  style={{
+                    background: "#0989FF",
+                    color: "#fff",
+                    border: 0,
+                    borderRadius: 6,
+                    padding: "7px 18px",
+                    fontWeight: 600,
+                    fontSize: 15,
+                    cursor: "pointer",
+                  }}
+                >
+                  수정하기
+                </button>
+                <button
+                  onClick={() => handleDeleteOrder(selectedOrder.id)}
+                  style={{
+                    background: "#ff4d4f",
+                    color: "#fff",
+                    border: 0,
+                    borderRadius: 6,
+                    padding: "7px 18px",
+                    fontWeight: 600,
+                    fontSize: 15,
+                    cursor: "pointer",
+                  }}
+                >
+                  삭제하기
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={saveEditOrder}
+                  style={{
+                    background: "#4CAF50",
+                    color: "#fff",
+                    border: 0,
+                    borderRadius: 6,
+                    padding: "7px 18px",
+                    fontWeight: 600,
+                    fontSize: 15,
+                    cursor: "pointer",
+                  }}
+                >
+                  저장
+                </button>
+                <button
+                  onClick={cancelEditOrder}
+                  style={{
+                    background: "#888",
+                    color: "#fff",
+                    border: 0,
+                    borderRadius: 6,
+                    padding: "7px 18px",
+                    fontWeight: 600,
+                    fontSize: 15,
+                    cursor: "pointer",
+                  }}
+                >
+                  취소
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -368,7 +606,7 @@ const AdminOrderFormPage = () => {
             <span style={{ color: "#888", fontWeight: 400, fontSize: 14 }}>({order.name})</span>
           </div>
           <div style={{ color: "#666", fontSize: 13, marginBottom: 4 }}>
-            {order.created_at?.slice(0, 16).replace("T", " ")}
+            {formatOrderDate(order.created_at)}
           </div>
           <div style={{ marginBottom: 4 }}>
             <b>금액:</b> {order.amount ? Number(order.amount).toLocaleString() + "원" : "-"}
@@ -473,8 +711,16 @@ const AdminOrderFormPage = () => {
       >
         에끌라린 주문서 관리
       </h2>
-      {/* 상태별 필터 버튼 */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+      {/* 상태별 필터 버튼 + 검색/정렬 UI */}
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          marginBottom: 20,
+          flexWrap: "wrap",
+          alignItems: "center",
+        }}
+      >
         {statusFilterOptions.map((opt) => (
           <button
             key={opt.value}
@@ -493,6 +739,39 @@ const AdminOrderFormPage = () => {
             {opt.label}
           </button>
         ))}
+        {/* 검색 input */}
+        <input
+          type="text"
+          placeholder="이름/닉네임 검색"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{
+            marginLeft: 12,
+            padding: "7px 12px",
+            border: "1px solid #ccc",
+            borderRadius: 6,
+            fontSize: 15,
+            minWidth: 160,
+          }}
+        />
+        {/* 정렬 토글 버튼 */}
+        <button
+          onClick={() => setOrderAsc((v) => !v)}
+          style={{
+            marginLeft: 4,
+            background: "#f3f4f6",
+            color: "#333",
+            border: 0,
+            borderRadius: 6,
+            padding: "8px 14px",
+            fontWeight: 500,
+            fontSize: 15,
+            cursor: "pointer",
+          }}
+          title={orderAsc ? "주문일 오름차순" : "주문일 내림차순"}
+        >
+          {orderAsc ? "▲ 오래된순" : "▼ 최신순"}
+        </button>
       </div>
       {loading ? (
         <div>로딩 중...</div>
@@ -525,9 +804,7 @@ const AdminOrderFormPage = () => {
             <tbody>
               {filteredOrders.map((order) => (
                 <tr key={order.id} style={{ cursor: "pointer" }}>
-                  <td onClick={() => openOrderModal(order)}>
-                    {order.created_at?.slice(0, 16).replace("T", " ")}
-                  </td>
+                  <td onClick={() => openOrderModal(order)}>{formatOrderDate(order.created_at)}</td>
                   <td onClick={() => openOrderModal(order)}>{order.nickname}</td>
                   <td onClick={() => openOrderModal(order)}>{order.name}</td>
                   <td onClick={() => openOrderModal(order)}>{order.phone}</td>

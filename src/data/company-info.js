@@ -13,7 +13,7 @@ export const companyInfo = {
 
   // 연락처 정보
   email: "9851248@gmail.com",
-  phone: "02-1234-5678",
+  phone: "010-7977-1248",
   customerServiceHours: "평일 09:00 - 18:00 (점심시간 12:00 - 13:00)",
 
   // 주소 정보

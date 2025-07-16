@@ -87,7 +87,7 @@ const FooterSimple = () => {
                 }}
               >
                 <div className="mb-1">
-                  구름섬컴퍼니 | 대표자: 박준영 | 대표전화: 010-7941-9600 | 이메일:
+                  구름섬컴퍼니 | 대표자: 박준영 | 대표전화: 010-7977-1248 | 이메일:
                   <a
                     href="mailto:9851248@gmail.com"
                     style={{ color: "#888", textDecoration: "none" }}
