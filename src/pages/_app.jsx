@@ -24,13 +24,13 @@ const NEXT_PUBLIC_GOOGLE_CLIENT_ID =
 export default function App({ Component, pageProps }) {
   const router = require("next/router").useRouter ? require("next/router").useRouter() : null;
   const pathname = router ? router.pathname : "";
-  const isAdminOrForm = pathname.startsWith("/admin") || pathname.startsWith("/form");
+  const isAdminOrForm = pathname === "/form" || pathname.startsWith("/admin");
   return (
     <GoogleOAuthProvider clientId={NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
       <Provider store={store}>
         <Elements stripe={stripePromise}>
           <div id="root">
-            {/* 개발중 안내: /form, /admin 경로는 예외 */}
+            {/* 개발중 안내: /form, /admin 및 하위 경로는 예외 */}
             {router && !isAdminOrForm && <DevNotice />}
             <Component {...pageProps} />
           </div>
