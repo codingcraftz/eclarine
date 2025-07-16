@@ -226,7 +226,7 @@ const FooterTwo = () => {
                               ></i>
                               <div>
                                 <div className="tp-footer-business-label mb-1">대표전화</div>
-                                <div className="tp-footer-business-value">010-7941-9600</div>
+                                <div className="tp-footer-business-value">010-7977-1248</div>
                               </div>
                             </div>
                           </div>
