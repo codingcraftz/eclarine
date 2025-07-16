@@ -1,27 +1,47 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 // internal
 import SEO from "@/components/seo";
 import HeaderTwo from "@/layout/headers/header-2";
 import FooterSimple from "@/layout/footers/footer-simple";
 import Wrapper from "@/layout/wrapper";
 import ErrorMsg from "@/components/common/error-msg";
-import { accessory_products } from "@/data/accessory-data";
+import { supabaseService } from "@/lib/supabase";
 import ProductDetailsBreadcrumb from "@/components/breadcrumb/product-details-breadcrumb";
 import ProductDetailsArea from "@/components/product-details/product-details-area";
 
 const ProductDetailsPage = ({ query }) => {
-  // MOCK 데이터에서 상품 찾기
-  const product = accessory_products.find((p) => p._id.toString() === query.id);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // decide what to render
+  useEffect(() => {
+    const fetchProduct = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await supabaseService.getProductById(query.id);
+        setProduct({
+          ...data,
+          category: data.category || data.categories || {},
+        });
+      } catch (err) {
+        setError("존재하지 않는 상품입니다. (id: " + query.id + ")");
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (query.id) fetchProduct();
+  }, [query.id]);
+
   let content = null;
-
-  if (!product) {
-    content = <ErrorMsg msg="상품을 찾을 수 없습니다" />;
-  } else {
+  if (loading) {
+    content = <div style={{ padding: 40, textAlign: "center" }}>로딩 중...</div>;
+  } else if (error) {
+    content = <ErrorMsg msg={error} />;
+  } else if (product) {
     content = (
       <>
-        <ProductDetailsBreadcrumb category={product.category.name} title={product.title} />
+        <ProductDetailsBreadcrumb category={product.category?.name} title={product.title} />
         <ProductDetailsArea productItem={product} />
       </>
     );

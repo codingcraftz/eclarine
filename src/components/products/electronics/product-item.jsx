@@ -12,14 +12,22 @@ import { add_cart_product } from "@/redux/features/cartSlice";
 import { add_to_wishlist } from "@/redux/features/wishlist-slice";
 
 const ProductItem = ({ product, offer_style = false }) => {
-  const { _id, img, category, title, reviews, price, discount, status, offerDate } = product || {};
+  const { id, featured_image, category, title, reviews, price, compare_price, status, offerDate } =
+    product || {};
   console.log(status);
   const { cart_products } = useSelector((state) => state.cart);
   const { wishlist } = useSelector((state) => state.wishlist);
-  const isAddedToCart = cart_products.some((prd) => prd._id === _id);
-  const isAddedToWishlist = wishlist.some((prd) => prd._id === _id);
+  const isAddedToCart = cart_products.some((prd) => prd.id === id);
+  const isAddedToWishlist = wishlist.some((prd) => prd.id === id);
   const dispatch = useDispatch();
   const [ratingVal, setRatingVal] = useState(0);
+
+  // 할인율 계산
+  const discountPercentage =
+    compare_price && compare_price > price
+      ? Math.round(((compare_price - price) / compare_price) * 100)
+      : 0;
+
   useEffect(() => {
     if (reviews && reviews.length > 0) {
       const rating = reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length;
@@ -46,9 +54,9 @@ const ProductItem = ({ product, offer_style = false }) => {
         } tp-product-item transition-3`}
       >
         <div className="tp-product-thumb p-relative fix">
-          <Link href={`/product-details/${_id}`}>
+          <Link href={`/product-details/${id}`}>
             <Image
-              src={img}
+              src={featured_image || "/assets/img/product/product-1.jpg"}
               width="0"
               height="0"
               sizes="100vw"
@@ -58,6 +66,9 @@ const ProductItem = ({ product, offer_style = false }) => {
 
             <div className="tp-product-badge">
               {status === "out-of-stock" && <span className="product-hot">out-stock</span>}
+              {discountPercentage > 0 && (
+                <span className="product-discount">-{discountPercentage}%</span>
+              )}
             </div>
           </Link>
 
@@ -116,7 +127,7 @@ const ProductItem = ({ product, offer_style = false }) => {
             <a href="#">{category?.name}</a>
           </div>
           <h3 className="tp-product-title">
-            <Link href={`/product-details/${_id}`}>{title}</Link>
+            <Link href={`/product-details/${id}`}>{title}</Link>
           </h3>
           <div className="tp-product-rating d-flex align-items-center">
             <div className="tp-product-rating-icon">
@@ -127,12 +138,11 @@ const ProductItem = ({ product, offer_style = false }) => {
             </div>
           </div>
           <div className="tp-product-price-wrapper">
-            {discount > 0 ? (
+            {compare_price && compare_price > price ? (
               <>
-                <span className="tp-product-price old-price">₩{price.toLocaleString()}</span>
-                <span className="tp-product-price new-price">
-                  {" "}
-                  ₩{(Number(price) - (Number(price) * Number(discount)) / 100).toLocaleString()}
+                <span className="tp-product-price new-price">₩{price?.toLocaleString()}</span>
+                <span className="tp-product-price old-price">
+                  ₩{compare_price?.toLocaleString()}
                 </span>
               </>
             ) : (

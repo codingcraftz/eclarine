@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper";
 // internal
-import { accessory_products } from "@/data/accessory-data";
+import { supabaseService } from "@/lib/supabase";
 import ProductItem from "../products/beauty/product-item";
 
 // slider setting
@@ -36,10 +36,16 @@ const slider_setting = {
 };
 
 const RelatedProducts = ({ id }) => {
-  // MOCK 데이터에서 현재 상품을 제외한 다른 상품들을 관련 상품으로 표시
-  const relatedProducts = accessory_products
-    .filter((product) => product._id.toString() !== id.toString())
-    .slice(0, 4);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+
+  useEffect(() => {
+    async function fetchProducts() {
+      const all = await supabaseService.getAllProducts();
+      // 현재 상품 제외, 최대 4개
+      setRelatedProducts(all.filter((p) => p.id !== id).slice(0, 4));
+    }
+    fetchProducts();
+  }, [id]);
 
   const content = (
     <Swiper
@@ -48,7 +54,7 @@ const RelatedProducts = ({ id }) => {
       className="tp-product-related-slider-active swiper-container mb-10"
     >
       {relatedProducts.map((item) => (
-        <SwiperSlide key={item._id}>
+        <SwiperSlide key={item.id}>
           <ProductItem product={item} primary_style={true} />
         </SwiperSlide>
       ))}

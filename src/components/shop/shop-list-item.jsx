@@ -8,12 +8,19 @@ import { Cart, CompareThree, QuickView, Wishlist } from "@/svg";
 import { handleProductModal } from "@/redux/features/productModalSlice";
 import { add_cart_product } from "@/redux/features/cartSlice";
 import { add_to_wishlist } from "@/redux/features/wishlist-slice";
-import { add_to_compare } from "@/redux/features/compareSlice";
 
 const ShopListItem = ({ product }) => {
-  const { _id, img, category, title, reviews, price, discount, tags, description } = product || {};
+  const { id, featured_image, category, title, reviews, price, compare_price, tags, description } =
+    product || {};
   const dispatch = useDispatch();
   const [ratingVal, setRatingVal] = useState(0);
+
+  // 할인율 계산
+  const discountPercentage =
+    compare_price && compare_price > price
+      ? Math.round(((compare_price - price) / compare_price) * 100)
+      : 0;
+
   useEffect(() => {
     if (reviews && reviews.length > 0) {
       const rating = reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length;
@@ -32,17 +39,24 @@ const ShopListItem = ({ product }) => {
     dispatch(add_to_wishlist(prd));
   };
 
-  // handle compare product
-  const handleCompareProduct = (prd) => {
-    dispatch(add_to_compare(prd));
-  };
-
   return (
     <div className="tp-product-list-item d-md-flex">
       <div className="tp-product-list-thumb p-relative fix">
-        <Link href={`/product-details/${_id}`}>
-          <Image src={img} alt="product img" width={350} height={310} />
+        <Link href={`/product-details/${id}`}>
+          <Image
+            src={featured_image || "/assets/img/product/product-1.jpg"}
+            alt="product img"
+            width={350}
+            height={310}
+          />
         </Link>
+
+        {/* 할인 배지 */}
+        {discountPercentage > 0 && (
+          <div className="tp-product-badge">
+            <span className="product-discount">-{discountPercentage}%</span>
+          </div>
+        )}
 
         {/* <!-- product action --> */}
         <div className="tp-product-action-2 tp-product-action-blackStyle">
@@ -63,14 +77,6 @@ const ShopListItem = ({ product }) => {
               <Wishlist />
               <span className="tp-product-tooltip tp-product-tooltip-right">Add To Wishlist</span>
             </button>
-            <button
-              type="button"
-              onClick={() => handleCompareProduct(product)}
-              className="tp-product-action-btn-2 tp-product-add-to-compare-btn"
-            >
-              <CompareThree />
-              <span className="tp-product-tooltip tp-product-tooltip-right">Add To Compare</span>
-            </button>
           </div>
         </div>
       </div>
@@ -84,25 +90,24 @@ const ShopListItem = ({ product }) => {
             ))}
           </div>
           <h3 className="tp-product-title-2">
-            <Link href={`/product-details/${_id}`}>{title}</Link>
+            <Link href={`/product-details/${id}`}>{title}</Link>
           </h3>
           <div className="tp-product-rating-icon tp-product-rating-icon-2">
             <Rating allowFraction size={16} initialValue={ratingVal} readonly={true} />
           </div>
           <div className="tp-product-price-wrapper-2">
-            {discount > 0 ? (
+            {compare_price && compare_price > price ? (
               <>
-                <span className="tp-product-price-2 new-price">₩{price.toLocaleString()}</span>
+                <span className="tp-product-price-2 new-price">₩{price?.toLocaleString()}</span>
                 <span className="tp-product-price-2 old-price">
-                  {" "}
-                  ₩{(Number(price) - (Number(price) * Number(discount)) / 100).toLocaleString()}
+                  ₩{compare_price?.toLocaleString()}
                 </span>
               </>
             ) : (
-              <span className="tp-product-price-2 new-price">₩{price.toLocaleString()}</span>
+              <span className="tp-product-price-2 new-price">₩{price?.toLocaleString()}</span>
             )}
           </div>
-          <p>{description.substring(0, 100)}</p>
+          <p>{description && description.substring(0, 100)}</p>
           <div className="tp-product-list-add-to-cart">
             <button
               onClick={() => handleAddProduct(product)}

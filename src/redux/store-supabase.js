@@ -9,7 +9,6 @@ import { supabaseOrderApi } from "./features/supabase-order-api";
 // 기존 슬라이스들
 import authSlice from "./features/auth/authSlice";
 import cartSlice from "./features/cartSlice";
-import compareSlice from "./features/compareSlice";
 import productModalSlice from "./features/productModalSlice";
 import shopFilterSlice from "./features/shop-filter-slice";
 import wishlistSlice from "./features/wishlist-slice";
@@ -32,7 +31,6 @@ const store = configureStore({
     shopFilter: shopFilterSlice,
     cart: cartSlice,
     wishlist: wishlistSlice,
-    compare: compareSlice,
     coupon: couponSlice,
     order: orderSlice,
   },

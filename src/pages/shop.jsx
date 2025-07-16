@@ -8,28 +8,36 @@ import ErrorMsg from "@/components/common/error-msg";
 import FooterSimple from "@/layout/footers/footer-simple";
 import ShopFilterOffCanvas from "@/components/common/shop-filter-offcanvas";
 import ShopLoader from "@/components/loader/shop/shop-loader";
-import { accessory_products } from "@/data/accessory-data";
+import { supabaseService } from "@/lib/supabase";
 
 const ShopPage = ({ query }) => {
-  // MOCK 데이터 사용 (외부 API 호출 제거)
-  const [products, setProducts] = useState({ data: accessory_products });
+  // 실제 DB 데이터 사용
+  const [products, setProducts] = useState({ data: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [priceValue, setPriceValue] = useState([0, 0]);
   const [selectValue, setSelectValue] = useState("");
   const [currPage, setCurrPage] = useState(1);
 
-  // 초기 로딩 시뮬레이션 및 최대 가격 설정
+  // 실제 상품 데이터 로딩
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const maxPrice = accessory_products.reduce((max, product) => {
-        return product.price > max ? product.price : max;
-      }, 0);
-      setPriceValue([0, maxPrice]);
-      setIsLoading(false);
-    }, 500); // 0.5초 로딩 시뮬레이션
-
-    return () => clearTimeout(timer);
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      setIsError(false);
+      try {
+        const data = await supabaseService.getActiveProducts();
+        setProducts({ data });
+        const maxPrice = data.reduce((max, product) => {
+          return product.price > max ? product.price : max;
+        }, 0);
+        setPriceValue([0, maxPrice]);
+      } catch (e) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProducts();
   }, []);
 
   // handleChanges
@@ -83,9 +91,9 @@ const ShopPage = ({ query }) => {
       } else if (selectValue === "가격 높은순") {
         product_items = products.data.slice().sort((a, b) => Number(b.price) - Number(a.price));
       } else if (selectValue === "신상품순") {
-        product_items = products.data.slice().sort((a, b) => b._id - a._id); // ID 기준 최신순
+        product_items = products.data.slice().sort((a, b) => b.id - a.id); // ID 기준 최신순
       } else if (selectValue === "할인상품") {
-        product_items = products.data.filter((p) => p.discount > 0);
+        product_items = products.data.filter((p) => p.compare_price > p.price);
       } else {
         product_items = products.data;
       }
@@ -99,33 +107,28 @@ const ShopPage = ({ query }) => {
     // 상태 필터
     if (query.status) {
       if (query.status === "on-sale") {
-        product_items = product_items.filter((p) => p.discount > 0);
+        product_items = product_items.filter((p) => p.compare_price > p.price);
       } else if (query.status === "in-stock") {
         product_items = product_items.filter((p) => p.status === "active");
       }
     }
 
-    // 카테고리 필터 (악세서리 카테고리에 맞게 수정)
+    // 카테고리 필터
     if (query.category) {
-      product_items = product_items.filter((p) => p.category.slug === query.category);
+      product_items = product_items.filter((p) => p.categories?.slug === query.category);
     }
 
-    // 제품 타입 필터 (목걸이, 팔찌, 반지 등)
-    if (query.type) {
-      product_items = product_items.filter((p) => p.type.slug === query.type);
-    }
-
-    // 브랜드 필터 (악세서리 브랜드에 맞게 수정)
+    // 브랜드 필터
     if (query.brand) {
       product_items = product_items.filter(
-        (p) => p.brand.name.toLowerCase().replace("&", "").split(" ").join("-") === query.brand
+        (p) => p.brands?.name?.toLowerCase().replace("&", "").split(" ").join("-") === query.brand
       );
     }
 
     // 태그 필터
     if (query.tag) {
       product_items = product_items.filter((p) =>
-        p.tags.some((tag) => tag.toLowerCase().replace("&", "").split(" ").join("-") === query.tag)
+        p.tags?.some((tag) => tag.toLowerCase().replace("&", "").split(" ").join("-") === query.tag)
       );
     }
 

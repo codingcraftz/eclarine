@@ -6,18 +6,27 @@ import DetailsTabNav from "./details-tab-nav";
 import RelatedProducts from "./related-products";
 
 const ProductDetailsArea = ({ productItem }) => {
-  const { _id, img, imageURLs, videoId, status } = productItem || {};
-  const [activeImg, setActiveImg] = useState(img);
+  const { featured_image, gallery_images, videoId, status, weight, dimensions } = productItem || {};
+  // featured_image + gallery_images를 합쳐 imageURLs 배열 생성
+  const imageURLs = [
+    ...(featured_image ? [{ img: featured_image }] : []),
+    ...(Array.isArray(gallery_images) ? gallery_images.map((img) => ({ img })) : []),
+  ];
+  const [activeImg, setActiveImg] = useState(featured_image);
   const dispatch = useDispatch();
-  // active image change when img change
+  // active image change when featured_image change
   useEffect(() => {
-    setActiveImg(img);
-  }, [img]);
+    setActiveImg(featured_image);
+  }, [featured_image]);
 
   // handle image active
   const handleImageActive = (item) => {
     setActiveImg(item.img);
   };
+  // 부가 정보 배열 생성
+  const additionalInformation = [];
+  if (weight) additionalInformation.push({ key: "중량", value: weight + "g" });
+  if (dimensions) additionalInformation.push({ key: "사이즈", value: dimensions });
   return (
     <section className="tp-product-details-area">
       <div className="tp-product-details-top pb-115">
@@ -39,7 +48,11 @@ const ProductDetailsArea = ({ productItem }) => {
             <div className="col-xl-5 col-lg-6">
               {/* product-details-wrapper start */}
               <DetailsWrapper
-                productItem={productItem}
+                productItem={{
+                  ...productItem,
+                  category: productItem.category || productItem.categories || {},
+                  additionalInformation,
+                }}
                 handleImageActive={handleImageActive}
                 activeImg={activeImg}
                 detailsBottom={true}
@@ -55,7 +68,7 @@ const ProductDetailsArea = ({ productItem }) => {
         <div className="container">
           <div className="row">
             <div className="col-xl-12">
-              <DetailsTabNav product={productItem} />
+              <DetailsTabNav product={{ ...productItem, additionalInformation }} />
             </div>
           </div>
         </div>
@@ -72,7 +85,7 @@ const ProductDetailsArea = ({ productItem }) => {
             </div>
           </div>
           <div className="row">
-            <RelatedProducts id={_id} />
+            <RelatedProducts id={productItem?.id} />
           </div>
         </div>
       </section>

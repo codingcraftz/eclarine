@@ -1,29 +1,28 @@
-import React from 'react';
-import { Delivery, Discount, Refund, Support } from '@/svg';
+import React from "react";
+import { Delivery, Discount, Refund, Support } from "@/svg";
 
 export const feature_data = [
   {
     icon: <Delivery />,
-    title: 'Free Delivery',
-    subtitle: 'Orders from all item'
+    title: "8만원 이상 무료배송",
+    subtitle: "전국 어디든 빠르고 안전하게 배송",
   },
   {
     icon: <Refund />,
-    title: 'Return & Refund',
-    subtitle: 'Money back guarantee'
+    title: "원하는 사이즈 주문 제작",
+    subtitle: "맞춤 제작/각인 가능 (문의 환영)",
   },
   {
     icon: <Discount />,
-    title: 'Member Discount',
-    subtitle: 'Onevery order over $140.00'
+    title: "모든 주문 친절상담",
+    subtitle: "카카오톡/전화/문자 문의 가능",
   },
   {
     icon: <Support />,
-    title: 'Support 24/7',
-    subtitle: 'Contact us 24 hours a day'
+    title: "고객센터 09:00~18:00 운영",
+    subtitle: "평일 09:00~18:00 (점심 12~13시)",
   },
-]
-
+];
 
 const FeatureAreaTwo = () => {
   return (
@@ -35,9 +34,7 @@ const FeatureAreaTwo = () => {
               <div key={i} className="col-xl-3 col-lg-3 col-md-6 col-sm-6">
                 <div className="tp-feature-item-2 d-flex align-items-start mb-40">
                   <div className="tp-feature-icon-2 mr-10">
-                    <span>
-                      {item.icon}
-                    </span>
+                    <span>{item.icon}</span>
                   </div>
                   <div className="tp-feature-content-2">
                     <h3 className="tp-feature-title-2">{item.title}</h3>

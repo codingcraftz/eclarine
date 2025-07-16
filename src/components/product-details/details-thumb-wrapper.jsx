@@ -2,6 +2,13 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import PopupVideo from "../common/popup-video";
 
+// Supabase Storage public URL 생성 함수
+const getImageUrl = (path) => {
+  if (!path) return "/assets/img/product/product-1.jpg";
+  if (path.startsWith("http")) return path;
+  return `https://twkqjhsoxiktglspades.supabase.co/storage/v1/object/public/${path}`;
+};
+
 const DetailsThumbWrapper = ({
   imageURLs,
   handleImageActive,
@@ -9,7 +16,7 @@ const DetailsThumbWrapper = ({
   imgWidth = 416,
   imgHeight = 480,
   videoId = false,
-  status
+  status,
 }) => {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   return (
@@ -38,13 +45,13 @@ const DetailsThumbWrapper = ({
           <div className="tab-pane fade show active">
             <div className="tp-product-details-nav-main-thumb p-relative">
               <Image
-                src={activeImg}
+                src={getImageUrl(activeImg)}
                 alt="product img"
                 width={imgWidth}
                 height={imgHeight}
               />
               <div className="tp-product-badge">
-                {status === 'out-of-stock' && <span className="product-hot">out-stock</span>}
+                {status === "out-of-stock" && <span className="product-hot">out-stock</span>}
               </div>
               {videoId && (
                 <div
@@ -62,11 +69,7 @@ const DetailsThumbWrapper = ({
       </div>
       {/* modal popup start */}
       {videoId && (
-        <PopupVideo
-          isVideoOpen={isVideoOpen}
-          setIsVideoOpen={setIsVideoOpen}
-          videoId={videoId}
-        />
+        <PopupVideo isVideoOpen={isVideoOpen} setIsVideoOpen={setIsVideoOpen} videoId={videoId} />
       )}
       {/* modal popup end */}
     </>

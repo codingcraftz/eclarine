@@ -3,127 +3,112 @@ import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
 import AdminLayout from "../../../components/admin/AdminLayout";
+import { supabaseService } from "../../../lib/supabase";
+import { getImageUrl, DEFAULT_LOGO_IMAGE } from "../../../utils/image-utils";
 
 const ProductsManagement = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [error, setError] = useState("");
+  const itemsPerPage = 10;
 
   useEffect(() => {
-    // 실제로는 Supabase에서 데이터를 가져올 예정
-    // 지금은 임시 데이터 설정
-    setTimeout(() => {
-      setProducts([
-        {
-          _id: "prod_pearl_rabbit_001",
-          title: "올실버 진주토끼 귀걸이",
-          sku: "ECL-PR-001",
-          price: 32000,
-          quantity: 42,
-          sold: 8,
-          status: "in-stock",
-          img: "https://via.placeholder.com/400x400?text=Product+1",
-          category: { name: "All Silver" },
-          createdAt: "2024-01-15",
-        },
-        {
-          _id: "prod_cross_necklace_001",
-          title: "올실버 십자가 목걸이",
-          sku: "ECL-CN-001",
-          price: 34000,
-          quantity: 25,
-          sold: 5,
-          status: "in-stock",
-          img: "https://via.placeholder.com/400x400?text=Product+2",
-          category: { name: "All Silver" },
-          createdAt: "2024-01-16",
-        },
-        {
-          _id: "prod_chain_bracelet_001",
-          title: "블링블링 실버 체인 팔찌",
-          sku: "ECL-CB-001",
-          price: 96000,
-          quantity: 13,
-          sold: 2,
-          status: "in-stock",
-          img: "https://via.placeholder.com/400x400?text=Product+3",
-          category: { name: "All Silver" },
-          createdAt: "2024-01-17",
-        },
-        {
-          _id: "prod_daisy_earring_001",
-          title: "데이지 실버 딱붙 귀걸이",
-          sku: "ECL-DE-001",
-          price: 18000,
-          quantity: 75,
-          sold: 25,
-          status: "in-stock",
-          img: "https://via.placeholder.com/400x400?text=Product+4",
-          category: { name: "All Silver" },
-          createdAt: "2024-01-18",
-        },
-        {
-          _id: "prod_heart_gem_earring_001",
-          title: "올실버 하트 보석 귀걸이",
-          sku: "ECL-HGE-001",
-          price: 33000,
-          quantity: 28,
-          sold: 12,
-          status: "in-stock",
-          img: "https://via.placeholder.com/400x400?text=Product+5",
-          category: { name: "All Silver" },
-          createdAt: "2024-01-19",
-        },
-      ]);
-      setLoading(false);
-    }, 1000);
-  }, []);
+    loadProducts();
+  }, [currentPage, searchTerm, filterStatus]);
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch =
-      product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.sku.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === "all" || product.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const { data, count } = await supabaseService.getProductsWithPagination(
+        currentPage,
+        itemsPerPage,
+        searchTerm,
+        filterStatus
+      );
+
+      setProducts(data || []);
+      setTotalCount(count || 0);
+    } catch (err) {
+      console.error("상품 로딩 오류:", err);
+      setError("상품 데이터를 불러오는데 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleStatusChange = async (productId, newStatus) => {
-    // 실제로는 Supabase 업데이트 API 호출
-    setProducts((prev) =>
-      prev.map((product) =>
-        product._id === productId ? { ...product, status: newStatus } : product
-      )
-    );
+    try {
+      await supabaseService.updateProduct(productId, { status: newStatus });
+      setProducts((prev) =>
+        prev.map((product) =>
+          product.id === productId ? { ...product, status: newStatus } : product
+        )
+      );
+    } catch (err) {
+      console.error("상품 상태 업데이트 오류:", err);
+      alert("상태 업데이트에 실패했습니다.");
+    }
+  };
+
+  const handleDeleteProduct = async (productId, productTitle) => {
+    if (window.confirm(`"${productTitle}" 상품을 삭제하시겠습니까?`)) {
+      try {
+        await supabaseService.deleteProduct(productId);
+        setProducts((prev) => prev.filter((product) => product.id !== productId));
+        alert("상품이 삭제되었습니다.");
+      } catch (err) {
+        console.error("상품 삭제 오류:", err);
+        alert("상품 삭제에 실패했습니다.");
+      }
+    }
   };
 
   const getStatusBadge = (status) => {
     const badges = {
-      "in-stock": "bg-green-100 text-green-800",
-      "out-of-stock": "bg-red-100 text-red-800",
-      discontinued: "bg-gray-100 text-gray-800",
+      active: "badge bg-success",
+      inactive: "badge bg-secondary",
+      draft: "badge bg-warning",
     };
 
     const labels = {
-      "in-stock": "판매중",
-      "out-of-stock": "품절",
-      discontinued: "단종",
+      active: "판매중",
+      inactive: "품절",
+      draft: "임시저장",
     };
 
     return (
-      <span
-        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${badges[status]}`}
-      >
-        {labels[status]}
-      </span>
+      <span className={badges[status] || "badge bg-secondary"}>{labels[status] || status}</span>
     );
+  };
+
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // 검색 시 첫 페이지로 이동
+  };
+
+  const handleStatusFilterChange = (e) => {
+    setFilterStatus(e.target.value);
+    setCurrentPage(1); // 필터 변경 시 첫 페이지로 이동
   };
 
   if (loading) {
     return (
       <AdminLayout activeTab="products">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+        <div
+          className="d-flex justify-content-center align-items-center"
+          style={{ height: "300px" }}
+        >
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
         </div>
       </AdminLayout>
     );
@@ -136,154 +121,226 @@ const ProductsManagement = () => {
       </Head>
 
       <AdminLayout activeTab="products">
-        <div className="space-y-6">
+        <div className="container-fluid p-4">
           {/* 페이지 헤더 */}
-          <div className="flex justify-between items-center">
+          <div className="d-flex justify-content-between align-items-center mb-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">상품 관리</h1>
-              <p className="mt-1 text-sm text-gray-600">
-                등록된 상품들을 관리하고 수정할 수 있습니다.
-              </p>
+              <h1 className="h2 mb-1">상품 관리</h1>
+              <p className="text-muted">등록된 상품들을 관리하고 수정할 수 있습니다.</p>
             </div>
             <Link
               href="/admin/products/register"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+              className="btn btn-primary"
+              style={{
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                border: "none",
+              }}
             >
-              <span className="mr-2">➕</span>새 상품 등록
+              <i className="fas fa-plus me-2"></i>새 상품 등록
             </Link>
           </div>
 
+          {/* 에러 메시지 */}
+          {error && (
+            <div className="alert alert-danger" role="alert">
+              {error}
+            </div>
+          )}
+
           {/* 필터 및 검색 */}
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <input
-                  type="text"
-                  placeholder="상품명 또는 SKU로 검색..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
-                />
-              </div>
-              <div>
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
-                >
-                  <option value="all">모든 상태</option>
-                  <option value="in-stock">판매중</option>
-                  <option value="out-of-stock">품절</option>
-                  <option value="discontinued">단종</option>
-                </select>
+          <div className="card mb-4">
+            <div className="card-body">
+              <div className="row g-3">
+                <div className="col-md-8">
+                  <input
+                    type="text"
+                    placeholder="상품명 또는 SKU로 검색..."
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    className="form-control"
+                  />
+                </div>
+                <div className="col-md-4">
+                  <select
+                    value={filterStatus}
+                    onChange={handleStatusFilterChange}
+                    className="form-select"
+                  >
+                    <option value="all">모든 상태</option>
+                    <option value="active">판매중</option>
+                    <option value="inactive">품절</option>
+                    <option value="draft">임시저장</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
 
           {/* 상품 목록 */}
-          <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                상품 목록 ({filteredProducts.length}개)
-              </h3>
+          <div className="card">
+            <div className="card-header d-flex justify-content-between align-items-center">
+              <h5 className="card-title mb-0">상품 목록 ({totalCount}개)</h5>
+              <small className="text-muted">
+                {totalPages > 1 && `${currentPage} / ${totalPages} 페이지`}
+              </small>
             </div>
 
-            {filteredProducts.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-gray-400 text-6xl mb-4">📦</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">상품이 없습니다</h3>
-                <p className="text-gray-500 mb-4">조건에 맞는 상품을 찾을 수 없습니다.</p>
-                <Link
-                  href="/admin/products/register"
-                  className="text-purple-600 hover:text-purple-500"
-                >
+            {products.length === 0 ? (
+              <div className="card-body text-center py-5">
+                <div className="mb-4" style={{ fontSize: "4rem" }}>
+                  📦
+                </div>
+                <h5 className="mb-3">상품이 없습니다</h5>
+                <p className="text-muted mb-4">조건에 맞는 상품을 찾을 수 없습니다.</p>
+                <Link href="/admin/products/register" className="btn btn-primary">
                   첫 번째 상품을 등록해보세요 →
                 </Link>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        상품 정보
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        SKU
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        가격
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        재고
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        판매량
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        상태
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        등록일
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        작업
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredProducts.map((product) => (
-                      <tr key={product._id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-12 w-12">
-                              <Image
-                                src={product.img}
-                                alt={product.title}
-                                width={48}
-                                height={48}
-                                className="rounded-lg object-cover"
-                              />
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900 max-w-xs truncate">
-                                {product.title}
-                              </div>
-                              <div className="text-sm text-gray-500">{product.category.name}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {product.sku}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ₩{product.price.toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <span className={product.quantity < 10 ? "text-red-600 font-medium" : ""}>
-                            {product.quantity}개
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {product.sold}개
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {getStatusBadge(product.status)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(product.createdAt).toLocaleDateString("ko-KR")}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex justify-end space-x-2">
-                            <button className="text-purple-600 hover:text-purple-900">수정</button>
-                            <button className="text-red-600 hover:text-red-900">삭제</button>
-                          </div>
-                        </td>
+              <>
+                <div className="table-responsive">
+                  <table className="table table-hover mb-0">
+                    <thead className="table-light">
+                      <tr>
+                        <th scope="col">상품 정보</th>
+                        <th scope="col">SKU</th>
+                        <th scope="col">가격</th>
+                        <th scope="col">재고</th>
+                        <th scope="col">판매량</th>
+                        <th scope="col">상태</th>
+                        <th scope="col">등록일</th>
+                        <th scope="col" className="text-end">
+                          작업
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {products.map((product) => (
+                        <tr key={product.id}>
+                          <td>
+                            <div className="d-flex align-items-center">
+                              <div className="flex-shrink-0 me-3">
+                                <Image
+                                  src={getImageUrl(product.featured_image, DEFAULT_LOGO_IMAGE)}
+                                  alt={product.title}
+                                  width={48}
+                                  height={48}
+                                  className="rounded object-cover"
+                                  style={{ width: "48px", height: "48px" }}
+                                />
+                              </div>
+                              <div>
+                                <div className="fw-medium" style={{ maxWidth: "200px" }}>
+                                  {product.title}
+                                </div>
+                                <small className="text-muted">
+                                  {product.categories?.name || "카테고리 없음"}
+                                </small>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <code className="text-dark">{product.sku}</code>
+                          </td>
+                          <td>
+                            <strong>₩{Number(product.price).toLocaleString()}</strong>
+                            {product.compare_price && (
+                              <div>
+                                <small className="text-muted text-decoration-line-through">
+                                  ₩{Number(product.compare_price).toLocaleString()}
+                                </small>
+                              </div>
+                            )}
+                          </td>
+                          <td>
+                            <span className={product.quantity < 10 ? "text-danger fw-medium" : ""}>
+                              {product.quantity}개
+                            </span>
+                            {product.quantity < 10 && (
+                              <small className="d-block text-warning">
+                                <i className="fas fa-exclamation-triangle me-1"></i>재고 부족
+                              </small>
+                            )}
+                          </td>
+                          <td>
+                            <span className="badge bg-info">{product.sales_count || 0}개</span>
+                          </td>
+                          <td>{getStatusBadge(product.status)}</td>
+                          <td>
+                            <small className="text-muted">
+                              {new Date(product.created_at).toLocaleDateString("ko-KR")}
+                            </small>
+                          </td>
+                          <td className="text-end">
+                            <div className="btn-group btn-group-sm">
+                              <button
+                                className="btn btn-outline-primary"
+                                onClick={() =>
+                                  (window.location.href = `/admin/products/edit/${product.id}`)
+                                }
+                              >
+                                <i className="fas fa-edit"></i>
+                              </button>
+                              <button
+                                className="btn btn-outline-danger"
+                                onClick={() => handleDeleteProduct(product.id, product.title)}
+                              >
+                                <i className="fas fa-trash"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* 페이지네이션 */}
+                {totalPages > 1 && (
+                  <div className="card-footer">
+                    <nav aria-label="상품 목록 페이지네이션">
+                      <ul className="pagination justify-content-center mb-0">
+                        <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+                          <button
+                            className="page-link"
+                            onClick={() => setCurrentPage(currentPage - 1)}
+                            disabled={currentPage === 1}
+                          >
+                            이전
+                          </button>
+                        </li>
+                        {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                          const pageNumber =
+                            currentPage <= 3 ? i + 1 : Math.max(1, currentPage - 2) + i;
+                          if (pageNumber > totalPages) return null;
+                          return (
+                            <li
+                              key={pageNumber}
+                              className={`page-item ${currentPage === pageNumber ? "active" : ""}`}
+                            >
+                              <button
+                                className="page-link"
+                                onClick={() => setCurrentPage(pageNumber)}
+                              >
+                                {pageNumber}
+                              </button>
+                            </li>
+                          );
+                        })}
+                        <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
+                          <button
+                            className="page-link"
+                            onClick={() => setCurrentPage(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                          >
+                            다음
+                          </button>
+                        </li>
+                      </ul>
+                    </nav>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
