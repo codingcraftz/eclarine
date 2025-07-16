@@ -23,14 +23,15 @@ const NEXT_PUBLIC_GOOGLE_CLIENT_ID =
   "375198830790-6lk26c7frudnqee2b55ge7fkbco1nkma.apps.googleusercontent.com";
 export default function App({ Component, pageProps }) {
   const router = require("next/router").useRouter ? require("next/router").useRouter() : null;
-  const isAdminRoute = router && router.pathname.startsWith("/admin");
+  const pathname = router ? router.pathname : "";
+  const isAdminOrForm = pathname.startsWith("/admin") || pathname.startsWith("/form");
   return (
     <GoogleOAuthProvider clientId={NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
       <Provider store={store}>
         <Elements stripe={stripePromise}>
           <div id="root">
-            {/* 개발중 안내: 관리자 경로가 아닐 때만 노출 */}
-            {router && !isAdminRoute && <DevNotice />}
+            {/* 개발중 안내: /form, /admin 경로는 예외 */}
+            {router && !isAdminOrForm && <DevNotice />}
             <Component {...pageProps} />
           </div>
         </Elements>
