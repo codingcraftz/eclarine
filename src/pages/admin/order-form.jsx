@@ -298,12 +298,13 @@ const AdminOrderFormPage = () => {
             boxShadow: "0 1px 8px rgba(0,0,0,0.06)",
             padding: 16,
             fontSize: 15,
+            minWidth: 0,
           }}
           onClick={() => openOrderModal(order)}
         >
-          <div style={{ fontWeight: 700, color: "#BD844C", marginBottom: 4 }}>
+          <div style={{ fontWeight: 700, color: "#BD844C", marginBottom: 4, fontSize: 18 }}>
             {order.nickname}{" "}
-            <span style={{ color: "#888", fontWeight: 400, fontSize: 13 }}>({order.name})</span>
+            <span style={{ color: "#888", fontWeight: 400, fontSize: 14 }}>({order.name})</span>
           </div>
           <div style={{ color: "#666", fontSize: 13, marginBottom: 4 }}>
             {order.created_at?.slice(0, 16).replace("T", " ")}
@@ -320,6 +321,33 @@ const AdminOrderFormPage = () => {
           </div>
           <div style={{ marginBottom: 4 }}>
             <b>캡쳐:</b> {order.capture_urls?.length || 0}장
+          </div>
+          <div style={{ marginTop: 8, display: "flex", gap: 4, flexWrap: "wrap" }}>
+            {order.capture_urls &&
+              order.capture_urls.length > 0 &&
+              order.capture_urls.map((url, idx) => (
+                <a
+                  key={idx}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-block",
+                    width: 48,
+                    height: 48,
+                    borderRadius: 6,
+                    overflow: "hidden",
+                    border: "1px solid #eee",
+                    background: "#fafafa",
+                  }}
+                >
+                  <img
+                    src={url}
+                    alt="캡쳐"
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                </a>
+              ))}
           </div>
         </div>
       ))}
@@ -343,52 +371,57 @@ const AdminOrderFormPage = () => {
       ) : isMobileView ? (
         renderMobileList()
       ) : (
-        <table className="table table-bordered" style={{ fontSize: 15, background: "#fff" }}>
-          <thead style={{ background: "#f9f7f3" }}>
-            <tr>
-              <th>주문일</th>
-              <th>닉네임</th>
-              <th>이름</th>
-              <th>전화번호</th>
-              <th>주소</th>
-              <th>결제방법</th>
-              <th>상태</th>
-              <th>캡쳐사진</th>
-              <th>요청사항</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => (
-              <tr
-                key={order.id}
-                style={{ cursor: "pointer" }}
-                onClick={() => openOrderModal(order)}
-              >
-                <td>{order.created_at?.slice(0, 16).replace("T", " ")}</td>
-                <td>{order.nickname}</td>
-                <td>{order.name}</td>
-                <td>{order.phone}</td>
-                <td>
-                  {order.address}
-                  <br />
-                  <span style={{ color: "#888", fontSize: 13 }}>{order.address_detail}</span>
-                </td>
-                <td>{order.payment}</td>
-                <td>
-                  <span style={{ color: "#0989FF" }}>{order.status}</span>
-                </td>
-                <td>
-                  {order.capture_urls && order.capture_urls.length > 0 ? (
-                    <span>{order.capture_urls.length}장</span>
-                  ) : (
-                    <span style={{ color: "#aaa" }}>없음</span>
-                  )}
-                </td>
-                <td style={{ maxWidth: 180, wordBreak: "break-all" }}>{order.request}</td>
+        <div style={{ overflowX: "auto" }}>
+          <table
+            className="table table-bordered"
+            style={{ fontSize: 15, background: "#fff", minWidth: 900 }}
+          >
+            <thead style={{ background: "#f9f7f3" }}>
+              <tr>
+                <th>주문일</th>
+                <th>닉네임</th>
+                <th>이름</th>
+                <th>전화번호</th>
+                <th>주소</th>
+                <th>결제방법</th>
+                <th>상태</th>
+                <th>캡쳐사진</th>
+                <th>요청사항</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {orders.map((order) => (
+                <tr
+                  key={order.id}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => openOrderModal(order)}
+                >
+                  <td>{order.created_at?.slice(0, 16).replace("T", " ")}</td>
+                  <td>{order.nickname}</td>
+                  <td>{order.name}</td>
+                  <td>{order.phone}</td>
+                  <td>
+                    {order.address}
+                    <br />
+                    <span style={{ color: "#888", fontSize: 13 }}>{order.address_detail}</span>
+                  </td>
+                  <td>{order.payment}</td>
+                  <td>
+                    <span style={{ color: "#0989FF" }}>{order.status}</span>
+                  </td>
+                  <td>
+                    {order.capture_urls && order.capture_urls.length > 0 ? (
+                      <span>{order.capture_urls.length}장</span>
+                    ) : (
+                      <span style={{ color: "#aaa" }}>없음</span>
+                    )}
+                  </td>
+                  <td style={{ maxWidth: 180, wordBreak: "break-all" }}>{order.request}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
       {showModal && renderOrderDetail()}
     </div>
