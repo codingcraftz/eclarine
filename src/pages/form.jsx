@@ -325,26 +325,6 @@ const FormPage = () => {
           {form.payment === "계좌이체" && (
             <div style={{ display: "flex", gap: 12, marginTop: 8, justifyContent: "flex-end" }}>
               <a
-                href={accountInfo.kakaoPayUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  background: "#FEE500",
-                  color: "#3C1E1E",
-                  border: "none",
-                  borderRadius: 6,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  fontSize: 15,
-                  padding: "6px 14px",
-                  textDecoration: "none",
-                  display: "inline-block",
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                }}
-              >
-                카카오페이 송금
-              </a>
-              <a
                 href={tossUrl}
                 style={{
                   background: "#0064FF",
