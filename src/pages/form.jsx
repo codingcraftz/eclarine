@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import { supabaseService } from "../lib/supabase";
+import { notifySuccess } from "../utils/toast";
 
 const DaumPostcode = dynamic(() => import("react-daum-postcode"), { ssr: false });
 
@@ -18,7 +19,7 @@ const initialState = {
 
 const paymentOptions = [
   {
-    label: "계좌이체 (국민은행 409102-01-206222 정*은)",
+    label: "계좌이체 (카카오뱅크 3333-16-4570159 박*영)",
     value: "계좌이체",
   },
   {
@@ -212,25 +213,6 @@ const FormPage = () => {
           {errors.address && <div style={{ color: "red", fontSize: 13 }}>{errors.address}</div>}
         </div>
         <div style={{ marginBottom: 16 }}>
-          <label>금액 *</label>
-          <input
-            name="amount"
-            value={form.amount}
-            onChange={(e) => {
-              // 숫자만 입력
-              const v = e.target.value.replace(/[^0-9]/g, "");
-              setForm({ ...form, amount: v });
-            }}
-            className="form-control amount-input"
-            placeholder="예시: 50000"
-            inputMode="numeric"
-          />
-          <div style={{ color: "#888", fontSize: 13, marginTop: 2 }}>
-            주문 금액을 숫자로 입력해 주세요.
-          </div>
-          {errors.amount && <div style={{ color: "red", fontSize: 13 }}>{errors.amount}</div>}
-        </div>
-        <div style={{ marginBottom: 16 }}>
           <label>캡쳐사진(다중 업로드) *</label>
           <input
             type="file"
@@ -289,6 +271,25 @@ const FormPage = () => {
           )}
         </div>
         <div style={{ marginBottom: 16 }}>
+          <label>금액 *</label>
+          <input
+            name="amount"
+            value={form.amount}
+            onChange={(e) => {
+              // 숫자만 입력
+              const v = e.target.value.replace(/[^0-9]/g, "");
+              setForm({ ...form, amount: v });
+            }}
+            className="form-control amount-input"
+            placeholder="예시: 50000"
+            inputMode="numeric"
+          />
+          <div style={{ color: "#888", fontSize: 13, marginTop: 2 }}>
+            주문 금액을 숫자로 입력해 주세요.
+          </div>
+          {errors.amount && <div style={{ color: "red", fontSize: 13 }}>{errors.amount}</div>}
+        </div>
+        <div style={{ marginBottom: 16 }}>
           <label>결제 방법 *</label>
           <div>
             {paymentOptions.map((opt) => (
@@ -307,6 +308,69 @@ const FormPage = () => {
               </div>
             ))}
           </div>
+          {/* 계좌 복사/카카오페이/TOSS 송금 버튼: 계좌이체 선택 시만 노출 */}
+          {form.payment === "계좌이체" && (
+            <div style={{ display: "flex", gap: 12, marginTop: 8, justifyContent: "flex-end" }}>
+              <a
+                href="https://qr.kakaopay.com/Ej9QfqGLl"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: "#FEE500",
+                  color: "#3C1E1E",
+                  border: "none",
+                  borderRadius: 6,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontSize: 15,
+                  padding: "6px 14px",
+                  textDecoration: "none",
+                  display: "inline-block",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                }}
+              >
+                카카오페이 송금
+              </a>
+              <a
+                href="supertoss://send?bank=카카오뱅크&accountNo=3333164570159&origin=에끌라린주문서"
+                style={{
+                  background: "#0064FF",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 6,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontSize: 15,
+                  padding: "6px 14px",
+                  textDecoration: "none",
+                  display: "inline-block",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                }}
+              >
+                TOSS 송금
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText("카카오뱅크 3333-16-4570159");
+                  notifySuccess("계좌번호가 복사되었습니다.");
+                }}
+                style={{
+                  background: "#eee",
+                  color: "#222",
+                  border: "none",
+                  borderRadius: 6,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontSize: 15,
+                  padding: "6px 14px",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                }}
+              >
+                계좌 복사하기
+              </button>
+            </div>
+          )}
           {errors.payment && <div style={{ color: "red", fontSize: 13 }}>{errors.payment}</div>}
         </div>
         <div style={{ marginBottom: 16 }}>
@@ -370,19 +434,14 @@ const FormPage = () => {
         해당 상품의 재고가 없을 경우, 환불로 대체될 수 있습니다.
         <br />
         <br />
-        4. <b>당첨 번호 및 취소 안내</b>
-        <br />
-        발송 전 불량 확인, 방송일로부터 3일 경과된 주문의 경우에는 주문이 자동 취소될 수 있습니다.
-        <br />
-        <br />
-        5. <b>배송비 및 거래 취소 기준</b>
+        4. <b>배송비 및 거래 취소 기준</b>
         <br />
         배송비 미입금 시 배송이 지연되거나 취소될 수 있습니다.
         <br />
         반복적인 주문 취소 고객은 주문이 제한될 수 있습니다.
         <br />
         <br />
-        6. <b>주문 정보 정확성 필수</b>
+        5. <b>주문 정보 정확성 필수</b>
         <br />
         주문서 작성 시, 성함/주소/연락처/닉네임 등의 정보는 반드시 정확하게 입력해주세요.
         <br />
