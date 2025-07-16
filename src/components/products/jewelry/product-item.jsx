@@ -3,7 +3,7 @@ import { Rating } from "react-simple-star-rating";
 import Link from "next/link";
 import Image from "next/image";
 import { useDispatch } from "react-redux";
-import { cart_product } from "../../../redux/features/cartSlice";
+import { add_cart_product } from "../../../redux/features/cartSlice";
 import { add_to_wishlist } from "../../../redux/features/wishlist-slice";
 import { getImageUrl } from "../../../utils/image-utils";
 
@@ -46,7 +46,7 @@ const ProductItem = ({ product }) => {
     if (isOutOfStock) return;
 
     dispatch(
-      cart_product({
+      add_cart_product({
         id,
         title,
         price,
