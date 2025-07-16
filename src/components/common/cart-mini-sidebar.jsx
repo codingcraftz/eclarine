@@ -50,7 +50,17 @@ const CartMiniSidebar = () => {
                   <div key={item._id} className="cartmini__widget-item">
                     <div className="cartmini__thumb">
                       <Link href={`/product-details/${item._id}`}>
-                        <Image src={item.img} width={70} height={60} alt="product img" />
+                        <Image
+                          src={
+                            item.img ||
+                            item.featured_image ||
+                            item.image ||
+                            "/assets/img/product/product-1.jpg"
+                          }
+                          width={70}
+                          height={60}
+                          alt="product img"
+                        />
                       </Link>
                     </div>
                     <div className="cartmini__content">
@@ -73,7 +83,7 @@ const CartMiniSidebar = () => {
                       </div>
                     </div>
                     <a
-                      onClick={() => handleRemovePrd({ title: item.title, id: item._id })}
+                      onClick={() => handleRemovePrd({ title: item.title, id: item.id })}
                       className="cartmini__del cursor-pointer"
                     >
                       <i className="fa-regular fa-xmark"></i>

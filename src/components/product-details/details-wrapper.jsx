@@ -9,8 +9,14 @@ import ProductDetailsCountdown from "./product-details-countdown";
 import ProductQuantity from "./product-quantity";
 import { add_cart_product } from "@/redux/features/cartSlice";
 import { add_to_wishlist } from "@/redux/features/wishlist-slice";
-import { add_to_compare } from "@/redux/features/compareSlice";
 import { handleModalClose } from "@/redux/features/productModalSlice";
+
+// Supabase Storage public URL 생성 함수
+const getImageUrl = (path) => {
+  if (!path) return "/assets/img/product/product-1.jpg";
+  if (path.startsWith("http")) return path;
+  return `https://twkqjhsoxiktglspades.supabase.co/storage/v1/object/public/${path}`;
+};
 
 const DetailsWrapper = ({ productItem, handleImageActive, activeImg, detailsBottom = false }) => {
   const {
@@ -50,15 +56,10 @@ const DetailsWrapper = ({ productItem, handleImageActive, activeImg, detailsBott
     dispatch(add_to_wishlist(prd));
   };
 
-  // handle compare product
-  const handleCompareProduct = (prd) => {
-    dispatch(add_to_compare(prd));
-  };
-
   return (
     <div className="tp-product-details-wrapper">
       <div className="tp-product-details-category">
-        <span>{category.name}</span>
+        <span>{category?.name || "카테고리 없음"}</span>
       </div>
       <h3 className="tp-product-details-title">{title}</h3>
 
@@ -97,7 +98,7 @@ const DetailsWrapper = ({ productItem, handleImageActive, activeImg, detailsBott
       </div>
 
       {/* variations */}
-      {imageURLs.some((item) => item?.color && item?.color?.name) && (
+      {Array.isArray(imageURLs) && imageURLs.some((item) => item?.color && item?.color?.name) && (
         <div className="tp-product-details-variation">
           <div className="tp-product-details-variation-item">
             <h4 className="tp-product-details-variation-title">Color :</h4>
@@ -152,15 +153,6 @@ const DetailsWrapper = ({ productItem, handleImageActive, activeImg, detailsBott
       </div>
       {/* product-details-action-sm start */}
       <div className="tp-product-details-action-sm">
-        <button
-          disabled={status === "out-of-stock"}
-          onClick={() => handleCompareProduct(productItem)}
-          type="button"
-          className="tp-product-details-action-sm-btn"
-        >
-          <CompareTwo />
-          비교하기
-        </button>
         <button
           disabled={status === "out-of-stock"}
           onClick={() => handleWishlistProduct(productItem)}

@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Scrollbar } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
 // internal
 import ProductItem from "./product-item";
-import { accessory_products } from "@/data/accessory-data";
+import { supabaseService } from "@/lib/supabase";
 
 // slider setting
 const slider_setting = {
@@ -36,10 +36,95 @@ const slider_setting = {
 };
 
 const BestSellerPrd = () => {
-  // MOCK 데이터에서 베스트셀러 상품 가져오기 (is_bestseller가 true인 상품들)
-  const bestSellerProducts = accessory_products
-    .filter((product) => product.is_bestseller)
-    .slice(0, 8);
+  const [bestSellerProducts, setBestSellerProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    loadBestSellerProducts();
+  }, []);
+
+  const loadBestSellerProducts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await supabaseService.getBestsellerProducts(8);
+      setBestSellerProducts(data || []);
+    } catch (err) {
+      console.error("베스트셀러 상품 로딩 오류:", err);
+      setError("베스트셀러 상품을 불러오는데 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <section className="tp-best-area pt-115">
+        <div className="container">
+          <div className="row">
+            <div className="col-xl-12">
+              <div className="tp-section-title-wrapper-4 mb-50 text-center">
+                <span className="tp-section-title-pre-4">이주의 베스트셀러</span>
+                <h3 className="tp-section-title-4">가장 사랑받는 악세서리</h3>
+              </div>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-xl-12 text-center">
+              <div className="spinner-border text-primary" role="status">
+                <span className="sr-only">로딩 중...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="tp-best-area pt-115">
+        <div className="container">
+          <div className="row">
+            <div className="col-xl-12">
+              <div className="tp-section-title-wrapper-4 mb-50 text-center">
+                <span className="tp-section-title-pre-4">이주의 베스트셀러</span>
+                <h3 className="tp-section-title-4">가장 사랑받는 악세서리</h3>
+              </div>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-xl-12 text-center">
+              <p className="text-danger">{error}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (bestSellerProducts.length === 0) {
+    return (
+      <section className="tp-best-area pt-115">
+        <div className="container">
+          <div className="row">
+            <div className="col-xl-12">
+              <div className="tp-section-title-wrapper-4 mb-50 text-center">
+                <span className="tp-section-title-pre-4">이주의 베스트셀러</span>
+                <h3 className="tp-section-title-4">가장 사랑받는 악세서리</h3>
+              </div>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-xl-12 text-center">
+              <p>베스트셀러 상품이 없습니다.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const content = (
     <Swiper
@@ -48,7 +133,7 @@ const BestSellerPrd = () => {
       className="tp-best-slider-active swiper-container mb-10"
     >
       {bestSellerProducts.map((item) => (
-        <SwiperSlide key={item._id} className="tp-best-item-4">
+        <SwiperSlide key={item.id} className="tp-best-item-4">
           <ProductItem product={item} />
         </SwiperSlide>
       ))}

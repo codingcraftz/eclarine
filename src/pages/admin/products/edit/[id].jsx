@@ -1,13 +1,20 @@
 import { useState, useEffect } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import AdminLayout from "../../../components/admin/AdminLayout";
-import ImageUpload from "../../../components/admin/ImageUpload";
-import { supabaseService } from "../../../lib/supabase";
+import AdminLayout from "../../../../components/admin/AdminLayout";
+import ImageUpload from "../../../../components/admin/ImageUpload";
+import { supabaseService } from "../../../../lib/supabase";
+import {
+  getImageUrl,
+  getGalleryImages,
+  DEFAULT_PRODUCT_IMAGE,
+} from "../../../../utils/image-utils";
 
-const ProductRegister = () => {
+const ProductEdit = () => {
   const router = useRouter();
+  const { id } = router.query;
   const [loading, setLoading] = useState(false);
+  const [loadingProduct, setLoadingProduct] = useState(true);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -28,14 +35,69 @@ const ProductRegister = () => {
     meta_title: "",
     meta_description: "",
   });
+  const [existingImages, setExistingImages] = useState([]);
   const [selectedImages, setSelectedImages] = useState([]);
+  const [imagesToDelete, setImagesToDelete] = useState([]);
   const [errors, setErrors] = useState({});
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
 
   useEffect(() => {
-    loadCategoriesAndBrands();
-  }, []);
+    if (id) {
+      loadProduct();
+      loadCategoriesAndBrands();
+    }
+  }, [id]);
+
+  const loadProduct = async () => {
+    try {
+      setLoadingProduct(true);
+      const product = await supabaseService.getProductById(id);
+
+      if (product) {
+        setFormData({
+          title: product.title || "",
+          description: product.description || "",
+          short_description: product.short_description || "",
+          price: product.price || "",
+          compare_price: product.compare_price || "",
+          quantity: product.quantity || "",
+          sku: product.sku || "",
+          category_id: product.category_id || "",
+          brand_id: product.brand_id || "",
+          tags: Array.isArray(product.tags) ? product.tags.join(", ") : "",
+          status: product.status || "active",
+          weight: product.weight || "",
+          dimensions: product.dimensions || "",
+          is_featured: product.is_featured || false,
+          is_popular: product.is_popular || false,
+          is_bestseller: product.is_bestseller || false,
+          meta_title: product.meta_title || "",
+          meta_description: product.meta_description || "",
+        });
+
+        // 기존 이미지 설정 (이미지 처리 유틸리티 사용)
+        const images = [];
+        if (product.featured_image) {
+          const processedFeaturedImage = getImageUrl(product.featured_image);
+          if (processedFeaturedImage !== DEFAULT_PRODUCT_IMAGE) {
+            images.push(processedFeaturedImage);
+          }
+        }
+        if (product.gallery_images && Array.isArray(product.gallery_images)) {
+          const processedGalleryImages = getGalleryImages(product.gallery_images);
+          images.push(...processedGalleryImages);
+        }
+        setExistingImages(images);
+      }
+    } catch (error) {
+      console.error("상품 로딩 오류:", error);
+      alert("상품을 불러오는데 실패했습니다.");
+      router.push("/admin/products");
+    } finally {
+      setLoadingProduct(false);
+    }
+  };
 
   const loadCategoriesAndBrands = async () => {
     try {
@@ -75,11 +137,9 @@ const ProductRegister = () => {
     }
   };
 
-  const generateSKU = () => {
-    const prefix = "ECL";
-    const timestamp = Date.now().toString().slice(-6);
-    const random = Math.random().toString(36).substring(2, 5).toUpperCase();
-    return `${prefix}-${timestamp}-${random}`;
+  const handleExistingImageRemove = (imageUrl) => {
+    setExistingImages((prev) => prev.filter((img) => img !== imageUrl));
+    setImagesToDelete((prev) => [...prev, imageUrl]);
   };
 
   const generateSlug = (title) => {
@@ -114,8 +174,8 @@ const ProductRegister = () => {
       newErrors.category_id = "카테고리를 선택해주세요.";
     }
 
-    if (selectedImages.length === 0) {
-      newErrors.images = "최소 1개의 상품 이미지를 업로드해주세요.";
+    if (existingImages.length === 0 && selectedImages.length === 0) {
+      newErrors.images = "최소 1개의 상품 이미지가 필요합니다.";
     }
 
     setErrors(newErrors);
@@ -132,15 +192,29 @@ const ProductRegister = () => {
     setLoading(true);
 
     try {
-      // 이미지 업로드
-      let imageUrls = [];
+      // 새로운 이미지 업로드
+      let newImageUrls = [];
       if (selectedImages.length > 0) {
         const uploadResults = await supabaseService.uploadMultipleImages(selectedImages);
-        imageUrls = uploadResults.map((result) => result.publicUrl);
+        newImageUrls = uploadResults.map((result) => result.publicUrl);
       }
 
-      // SKU 자동 생성
-      const sku = formData.sku || generateSKU();
+      // 삭제할 이미지들 처리
+      if (imagesToDelete.length > 0) {
+        await Promise.all(
+          imagesToDelete.map((imageUrl) => {
+            // URL에서 파일 경로 추출
+            const urlParts = imageUrl.split("/");
+            const fileName = urlParts[urlParts.length - 1];
+            const filePath = `products/${fileName}`;
+            return supabaseService.deleteImage(filePath);
+          })
+        );
+      }
+
+      // 최종 이미지 URL 배열 생성
+      const allImageUrls = [...existingImages, ...newImageUrls];
+
       const slug = generateSlug(formData.title);
 
       // 상품 데이터 구성
@@ -149,14 +223,15 @@ const ProductRegister = () => {
         slug: slug,
         description: formData.description,
         short_description: formData.short_description,
-        sku: sku,
+        sku: formData.sku,
         price: Number(formData.price),
         compare_price: formData.compare_price ? Number(formData.compare_price) : null,
         quantity: Number(formData.quantity),
         weight: formData.weight ? Number(formData.weight) : null,
+        dimensions: formData.dimensions || null,
         status: formData.status,
-        featured_image: imageUrls[0] || null,
-        gallery_images: imageUrls.length > 1 ? imageUrls.slice(1) : [],
+        featured_image: allImageUrls[0] || null,
+        gallery_images: allImageUrls.length > 1 ? allImageUrls.slice(1) : [],
         category_id: formData.category_id || null,
         brand_id: formData.brand_id || null,
         is_featured: formData.is_featured,
@@ -168,27 +243,42 @@ const ProductRegister = () => {
           .split(",")
           .map((tag) => tag.trim())
           .filter((tag) => tag),
-        rating: 0,
-        rating_count: 0,
       };
 
-      // Supabase에 상품 등록
-      const result = await supabaseService.createProduct(productData);
+      // Supabase에 상품 업데이트
+      await supabaseService.updateProduct(id, productData);
 
-      alert("상품이 성공적으로 등록되었습니다!");
+      alert("상품이 성공적으로 수정되었습니다!");
       router.push("/admin/products");
     } catch (error) {
-      console.error("상품 등록 오류:", error);
-      alert("상품 등록에 실패했습니다. 다시 시도해주세요.");
+      console.error("상품 수정 오류:", error);
+      alert("상품 수정에 실패했습니다. 다시 시도해주세요.");
     } finally {
       setLoading(false);
     }
   };
 
+  if (loadingProduct) {
+    return (
+      <AdminLayout activeTab="products">
+        <div className="container-fluid p-4">
+          <div
+            className="d-flex justify-content-center align-items-center"
+            style={{ height: "400px" }}
+          >
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <>
       <Head>
-        <title>상품 등록 - 에끌라린 관리자</title>
+        <title>상품 수정 - 에끌라린 관리자</title>
       </Head>
 
       <AdminLayout activeTab="products">
@@ -196,8 +286,8 @@ const ProductRegister = () => {
           {/* 페이지 헤더 */}
           <div className="d-flex justify-content-between align-items-center mb-4">
             <div>
-              <h1 className="h2 mb-1">상품 등록</h1>
-              <p className="text-muted">새로운 상품을 등록하고 관리할 수 있습니다.</p>
+              <h1 className="h2 mb-1">상품 수정</h1>
+              <p className="text-muted">기존 상품 정보를 수정할 수 있습니다.</p>
             </div>
             <button
               type="button"
@@ -209,7 +299,7 @@ const ProductRegister = () => {
             </button>
           </div>
 
-          {/* 상품 등록 폼 */}
+          {/* 상품 수정 폼 */}
           <form onSubmit={handleSubmit}>
             <div className="row">
               {/* 왼쪽 컬럼 - 기본 정보 */}
@@ -241,9 +331,8 @@ const ProductRegister = () => {
                           value={formData.sku}
                           onChange={handleInputChange}
                           className="form-control"
-                          placeholder="자동 생성됩니다"
+                          placeholder="SKU"
                         />
-                        <small className="text-muted">비워두면 자동으로 생성됩니다</small>
                       </div>
 
                       <div className="col-md-12 mb-3">
@@ -297,7 +386,8 @@ const ProductRegister = () => {
                   <div className="card-body">
                     <ImageUpload
                       onImagesChange={handleImagesChange}
-                      existingImages={[]}
+                      existingImages={existingImages}
+                      onExistingImageRemove={handleExistingImageRemove}
                       maxImages={5}
                     />
                     {errors.images && <div className="text-danger mt-2">{errors.images}</div>}
@@ -392,18 +482,27 @@ const ProductRegister = () => {
                         step="0.1"
                       />
                     </div>
+                  </div>
+                </div>
 
+                <div className="card mb-4">
+                  <div className="card-header">
+                    <h5 className="card-title mb-0">치수 정보</h5>
+                  </div>
+                  <div className="card-body">
                     <div className="mb-3">
-                      <label className="form-label">상품 크기</label>
+                      <label className="form-label">치수</label>
                       <input
                         type="text"
                         name="dimensions"
                         value={formData.dimensions}
                         onChange={handleInputChange}
                         className="form-control"
-                        placeholder="예: 15 x 10 x 5 cm"
+                        placeholder="예: 10cm x 5cm x 2cm"
                       />
-                      <small className="text-muted">가로 x 세로 x 높이 형식으로 입력</small>
+                      <small className="text-muted">
+                        상품의 치수를 입력해주세요 (예: 10cm x 5cm x 2cm)
+                      </small>
                     </div>
                   </div>
                 </div>
@@ -535,18 +634,18 @@ const ProductRegister = () => {
                   </div>
                 </div>
 
-                {/* 등록 버튼 */}
+                {/* 저장 버튼 */}
                 <div className="d-grid gap-2">
                   <button type="submit" disabled={loading} className="btn btn-primary btn-lg">
                     {loading ? (
                       <>
                         <span className="spinner-border spinner-border-sm me-2" />
-                        등록 중...
+                        수정 중...
                       </>
                     ) : (
                       <>
-                        <i className="fas fa-plus me-2"></i>
-                        상품 등록
+                        <i className="fas fa-save me-2"></i>
+                        상품 수정
                       </>
                     )}
                   </button>
@@ -567,4 +666,4 @@ const ProductRegister = () => {
   );
 };
 
-export default ProductRegister;
+export default ProductEdit;

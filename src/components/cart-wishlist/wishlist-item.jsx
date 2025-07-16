@@ -8,9 +8,9 @@ import { add_cart_product, quantityDecrement } from "@/redux/features/cartSlice"
 import { remove_wishlist_product } from "@/redux/features/wishlist-slice";
 
 const WishlistItem = ({ product }) => {
-  const { _id, img, title, price } = product || {};
+  const { id, img, title, price, featured_image, image } = product || {};
   const { cart_products } = useSelector((state) => state.cart);
-  const isAddToCart = cart_products.find((item) => item._id === _id);
+  const isAddToCart = cart_products.find((item) => item.id === id);
   const dispatch = useDispatch();
   // handle add product
   const handleAddProduct = (prd) => {
@@ -28,12 +28,17 @@ const WishlistItem = ({ product }) => {
   return (
     <tr>
       <td className="tp-cart-img">
-        <Link href={`/product-details/${_id}`}>
-          <Image src={img} alt="product img" width={70} height={100} />
+        <Link href={`/product-details/${id}`}>
+          <Image
+            src={img || featured_image || image || "/assets/img/product/product-1.jpg"}
+            alt="product img"
+            width={70}
+            height={100}
+          />
         </Link>
       </td>
       <td className="tp-cart-title">
-        <Link href={`/product-details/${_id}`}>{title}</Link>
+        <Link href={`/product-details/${id}`}>{title}</Link>
       </td>
       <td className="tp-cart-price">
         <span>₩{price.toLocaleString()}</span>
@@ -66,7 +71,7 @@ const WishlistItem = ({ product }) => {
       </td>
 
       <td className="tp-cart-action">
-        <button onClick={() => handleRemovePrd({ title, id: _id })} className="tp-cart-action-btn">
+        <button onClick={() => handleRemovePrd({ title, id })} className="tp-cart-action-btn">
           <Close />
           <span> 삭제</span>
         </button>

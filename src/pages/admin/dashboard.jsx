@@ -1,74 +1,87 @@
 import { useState, useEffect } from "react";
 import Head from "next/head";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { supabaseService } from "@/lib/supabase";
 
 // 통계 카드 컴포넌트
 const StatCard = ({ title, value, icon, color, trend, trendValue, description }) => {
-  const colorClasses = {
-    blue: "from-blue-500 to-blue-600",
-    green: "from-green-500 to-green-600",
-    purple: "from-purple-500 to-purple-600",
-    orange: "from-orange-500 to-orange-600",
-    pink: "from-pink-500 to-pink-600",
-    indigo: "from-indigo-500 to-indigo-600",
+  const gradientStyles = {
+    blue: { background: "linear-gradient(135deg, #3b82f6, #1d4ed8)" },
+    green: { background: "linear-gradient(135deg, #10b981, #059669)" },
+    purple: { background: "linear-gradient(135deg, #8b5cf6, #7c3aed)" },
+    orange: { background: "linear-gradient(135deg, #f59e0b, #d97706)" },
+    pink: { background: "linear-gradient(135deg, #ec4899, #db2777)" },
+    indigo: { background: "linear-gradient(135deg, #6366f1, #4f46e5)" },
   };
 
   return (
-    <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <div className="flex items-center mb-2">
-            <div
-              className={`w-12 h-12 rounded-xl bg-gradient-to-r ${colorClasses[color]} flex items-center justify-center text-white shadow-lg`}
-            >
-              {icon}
-            </div>
-            <div className="ml-4">
-              <h3 className="text-sm font-medium text-slate-600">{title}</h3>
-              <p className="text-2xl font-bold text-slate-800">{value}</p>
-            </div>
-          </div>
-          {trend && (
-            <div className="flex items-center mt-3">
+    <div
+      className="card border-0 shadow-lg h-100"
+      style={{ backgroundColor: "rgba(255, 255, 255, 0.9)" }}
+    >
+      <div className="card-body p-4">
+        <div className="d-flex align-items-center justify-content-between">
+          <div className="flex-fill">
+            <div className="d-flex align-items-center mb-3">
               <div
-                className={`flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                  trend === "up" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                }`}
+                className="d-flex align-items-center justify-content-center rounded-3 shadow-sm me-3"
+                style={{ width: "48px", height: "48px", ...gradientStyles[color] }}
               >
-                {trend === "up" ? (
-                  <svg
-                    className="w-3 h-3 mr-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M7 11l5-5m0 0l5 5m-5-5v12"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    className="w-3 h-3 mr-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 13l-5 5m0 0l-5-5m5 5V6"
-                    />
-                  </svg>
-                )}
-                {trendValue}
+                <div className="text-white">{icon}</div>
               </div>
-              <span className="text-xs text-slate-500 ml-2">{description}</span>
+              <div>
+                <h6 className="text-muted mb-1 small fw-medium">{title}</h6>
+                <h3 className="mb-0 fw-bold text-dark">{value}</h3>
+              </div>
             </div>
-          )}
+            {trend && (
+              <div className="d-flex align-items-center">
+                <div
+                  className={`d-flex align-items-center px-2 py-1 rounded-pill small fw-medium ${
+                    trend === "up"
+                      ? "bg-success bg-opacity-10 text-success"
+                      : "bg-danger bg-opacity-10 text-danger"
+                  }`}
+                >
+                  {trend === "up" ? (
+                    <svg
+                      className="me-1"
+                      width="12"
+                      height="12"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 11l5-5m0 0l5 5m-5-5v12"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="me-1"
+                      width="12"
+                      height="12"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 13l-5 5m0 0l-5-5m5 5V6"
+                      />
+                    </svg>
+                  )}
+                  {trendValue}
+                </div>
+                <span className="text-muted ms-2 small">{description}</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -77,11 +90,11 @@ const StatCard = ({ title, value, icon, color, trend, trendValue, description })
 
 // 최근 주문 아이템 컴포넌트
 const RecentOrderItem = ({ order }) => {
-  const statusColors = {
-    pending: "bg-yellow-100 text-yellow-800",
-    processing: "bg-blue-100 text-blue-800",
-    completed: "bg-green-100 text-green-800",
-    cancelled: "bg-red-100 text-red-800",
+  const statusStyles = {
+    pending: { backgroundColor: "rgba(255, 193, 7, 0.1)", color: "#b45309" },
+    processing: { backgroundColor: "rgba(13, 110, 253, 0.1)", color: "#0a58ca" },
+    completed: { backgroundColor: "rgba(25, 135, 84, 0.1)", color: "#0f5132" },
+    cancelled: { backgroundColor: "rgba(220, 53, 69, 0.1)", color: "#842029" },
   };
 
   const statusText = {
@@ -92,11 +105,20 @@ const RecentOrderItem = ({ order }) => {
   };
 
   return (
-    <div className="flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-colors duration-200">
-      <div className="flex items-center space-x-4">
-        <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center">
+    <div className="d-flex align-items-center justify-content-between p-3 rounded-3 border border-light hover-bg-light">
+      <div className="d-flex align-items-center">
+        <div
+          className="d-flex align-items-center justify-content-center rounded-3 me-3"
+          style={{
+            width: "48px",
+            height: "48px",
+            background: "linear-gradient(135deg, #dbeafe, #ede9fe)",
+          }}
+        >
           <svg
-            className="w-6 h-6 text-blue-600"
+            className="text-primary"
+            width="24"
+            height="24"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -110,16 +132,15 @@ const RecentOrderItem = ({ order }) => {
           </svg>
         </div>
         <div>
-          <p className="font-medium text-slate-800">{order.customerName}</p>
-          <p className="text-sm text-slate-600">{order.product}</p>
+          <h6 className="mb-1 fw-medium">{order.customerName}</h6>
+          <p className="mb-0 small text-muted">{order.product}</p>
         </div>
       </div>
-      <div className="text-right">
-        <p className="font-semibold text-slate-800">₩{order.amount.toLocaleString()}</p>
+      <div className="text-end">
+        <h6 className="mb-1 fw-semibold">₩{order.amount.toLocaleString()}</h6>
         <span
-          className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-            statusColors[order.status]
-          }`}
+          className="badge rounded-pill px-2 py-1 small fw-medium"
+          style={statusStyles[order.status]}
         >
           {statusText[order.status]}
         </span>
@@ -130,26 +151,32 @@ const RecentOrderItem = ({ order }) => {
 
 // 빠른 작업 버튼 컴포넌트
 const QuickActionButton = ({ title, description, icon, color, onClick }) => {
-  const colorClasses = {
-    blue: "from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700",
-    green: "from-green-500 to-green-600 hover:from-green-600 hover:to-green-700",
-    purple: "from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700",
-    orange: "from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700",
-    pink: "from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700",
+  const gradientStyles = {
+    blue: { background: "linear-gradient(135deg, #3b82f6, #1d4ed8)" },
+    green: { background: "linear-gradient(135deg, #10b981, #059669)" },
+    purple: { background: "linear-gradient(135deg, #8b5cf6, #7c3aed)" },
+    orange: { background: "linear-gradient(135deg, #f59e0b, #d97706)" },
+    pink: { background: "linear-gradient(135deg, #ec4899, #db2777)" },
   };
 
   return (
     <button
       onClick={onClick}
-      className={`w-full p-4 bg-gradient-to-r ${colorClasses[color]} text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] text-left`}
+      className="btn w-100 text-start p-3 border-0 shadow-sm rounded-3 mb-2"
+      style={gradientStyles[color]}
     >
-      <div className="flex items-center">
-        <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mr-3">
+      <div className="d-flex align-items-center text-white">
+        <div
+          className="d-flex align-items-center justify-content-center rounded-2 me-3"
+          style={{ width: "40px", height: "40px", backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+        >
           {icon}
         </div>
         <div>
-          <h3 className="font-semibold text-sm">{title}</h3>
-          <p className="text-xs text-white/80">{description}</p>
+          <h6 className="mb-1 fw-semibold small text-white">{title}</h6>
+          <p className="mb-0 small" style={{ color: "rgba(255, 255, 255, 0.8)" }}>
+            {description}
+          </p>
         </div>
       </div>
     </button>
@@ -168,74 +195,65 @@ const AdminDashboard = () => {
 
   const [recentOrders, setRecentOrders] = useState([]);
   const [lowStockItems, setLowStockItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    // 실제 데이터 로딩 시뮬레이션
-    const loadData = async () => {
-      // 통계 데이터 (실제로는 API 호출)
-      setStats({
-        totalProducts: 247,
-        totalOrders: 1823,
-        totalUsers: 892,
-        totalRevenue: 45890000,
-        newOrders: 23,
-        lowStockProducts: 12,
-      });
-
-      // 최근 주문 데이터
-      setRecentOrders([
-        {
-          id: 1,
-          customerName: "김예린",
-          product: "925 실버 목걸이",
-          amount: 89000,
-          status: "processing",
-          date: "2024-01-15",
-        },
-        {
-          id: 2,
-          customerName: "박지민",
-          product: "14K 골드 반지",
-          amount: 340000,
-          status: "pending",
-          date: "2024-01-15",
-        },
-        {
-          id: 3,
-          customerName: "이서준",
-          product: "써지컬 스틸 귀걸이",
-          amount: 65000,
-          status: "completed",
-          date: "2024-01-14",
-        },
-        {
-          id: 4,
-          customerName: "최수진",
-          product: "진주 브레이슬릿",
-          amount: 150000,
-          status: "processing",
-          date: "2024-01-14",
-        },
-      ]);
-
-      // 재고 부족 상품
-      setLowStockItems([
-        { name: "925 실버 하트 목걸이", stock: 3 },
-        { name: "14K 골드 큐빅 반지", stock: 1 },
-        { name: "써지컬 스틸 크로스 목걸이", stock: 2 },
-        { name: "진주 드롭 귀걸이", stock: 4 },
-      ]);
-    };
-
-    loadData();
+    loadDashboardData();
   }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      // 통계 데이터 로딩
+      const dashboardStats = await supabaseService.getDashboardStats();
+      setStats(dashboardStats);
+
+      // 최근 주문 데이터 로딩
+      const recentOrdersData = await supabaseService.getRecentOrders(5);
+
+      // 주문 데이터 포맷팅
+      const formattedOrders = recentOrdersData.map((order) => ({
+        id: order.id,
+        customerName: order.user_profiles
+          ? `${order.user_profiles.first_name || ""} ${order.user_profiles.last_name || ""}`.trim()
+          : "고객",
+        product: `주문 #${order.id}`,
+        amount: order.total_amount,
+        status: order.status,
+        date: new Date(order.created_at).toLocaleDateString("ko-KR"),
+      }));
+      setRecentOrders(formattedOrders);
+
+      // 재고 부족 상품 데이터 로딩
+      const lowStockData = await supabaseService.getLowStockProducts(5);
+      setLowStockItems(lowStockData || []);
+    } catch (error) {
+      console.error("대시보드 데이터 로딩 오류:", error);
+      setError("대시보드 데이터를 불러오는데 실패했습니다.");
+
+      // 오류 발생 시 기본 데이터 설정
+      setStats({
+        totalProducts: 0,
+        totalOrders: 0,
+        totalUsers: 0,
+        totalRevenue: 0,
+        newOrders: 0,
+        lowStockProducts: 0,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const quickActions = [
     {
       title: "새 상품 등록",
       description: "새로운 주얼리 상품을 추가하세요",
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -251,7 +269,7 @@ const AdminDashboard = () => {
       title: "주문 현황",
       description: "최신 주문을 확인하세요",
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -267,7 +285,7 @@ const AdminDashboard = () => {
       title: "재고 관리",
       description: "상품 재고를 업데이트하세요",
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -283,7 +301,7 @@ const AdminDashboard = () => {
       title: "고객 지원",
       description: "고객 문의를 처리하세요",
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -304,171 +322,83 @@ const AdminDashboard = () => {
       </Head>
 
       <AdminLayout activeTab="dashboard">
-        <div className="space-y-8">
-          {/* 페이지 헤더 */}
-          <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  에끌라린 대시보드
-                </h1>
-                <p className="mt-2 text-slate-600">
-                  프리미엄 주얼리 브랜드의 주요 지표와 현황을 한눈에 확인하세요
-                </p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="bg-gradient-to-r from-green-100 to-blue-100 px-4 py-2 rounded-xl border border-green-200">
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                    <span className="text-sm font-medium text-green-700">실시간 연결</span>
-                  </div>
-                </div>
-                <div className="bg-gradient-to-r from-blue-100 to-purple-100 px-4 py-2 rounded-xl border border-blue-200">
-                  <span className="text-sm font-medium text-blue-700">
-                    {new Date().toLocaleDateString("ko-KR", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </span>
-                </div>
+        <div className="container-fluid">
+          {/* 에러 메시지 */}
+          {error && (
+            <div className="alert alert-danger" role="alert">
+              {error}
+            </div>
+          )}
+
+          {/* 로딩 상태 */}
+          {loading && (
+            <div
+              className="d-flex justify-content-center align-items-center"
+              style={{ height: "300px" }}
+            >
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* 통계 카드 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard
-              title="총 상품 수"
-              value={stats.totalProducts.toLocaleString()}
-              icon={
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                  />
-                </svg>
-              }
-              color="blue"
-              trend="up"
-              trendValue="+12%"
-              description="지난 달 대비"
-            />
-            <StatCard
-              title="총 주문 수"
-              value={stats.totalOrders.toLocaleString()}
-              icon={
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5"
-                  />
-                </svg>
-              }
-              color="green"
-              trend="up"
-              trendValue="+8%"
-              description="지난 달 대비"
-            />
-            <StatCard
-              title="총 회원 수"
-              value={stats.totalUsers.toLocaleString()}
-              icon={
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-                  />
-                </svg>
-              }
-              color="purple"
-              trend="up"
-              trendValue="+15%"
-              description="지난 달 대비"
-            />
-            <StatCard
-              title="총 매출"
-              value={`₩${Math.floor(stats.totalRevenue / 10000).toLocaleString()}만`}
-              icon={
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-                  />
-                </svg>
-              }
-              color="orange"
-              trend="up"
-              trendValue="+23%"
-              description="지난 달 대비"
-            />
-          </div>
-
-          {/* 메인 컨텐츠 그리드 */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* 최근 주문 */}
-            <div className="lg:col-span-2">
-              <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20">
-                <div className="p-6 border-b border-slate-200">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-slate-800">최근 주문</h2>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-                      <span className="text-sm text-slate-600">실시간 업데이트</span>
+          {!loading && (
+            <>
+              {/* 페이지 헤더 */}
+              <div className="row mb-4">
+                <div className="col-12">
+                  <div
+                    className="card border-0 shadow-sm"
+                    style={{ backgroundColor: "rgba(255, 255, 255, 0.8)" }}
+                  >
+                    <div className="card-body p-4">
+                      <div className="d-flex align-items-center justify-content-between flex-wrap">
+                        <div className="mb-3 mb-md-0">
+                          <h1 className="display-6 fw-bold text-primary mb-2">에끌라린 대시보드</h1>
+                          <p className="text-muted mb-0">
+                            프리미엄 주얼리 브랜드의 주요 지표와 현황을 한눈에 확인하세요
+                          </p>
+                        </div>
+                        <div className="d-flex align-items-center gap-3">
+                          <div
+                            className="d-flex align-items-center px-3 py-2 rounded-3 border border-success border-opacity-25"
+                            style={{ backgroundColor: "rgba(25, 135, 84, 0.1)" }}
+                          >
+                            <div
+                              className="rounded-circle bg-success me-2"
+                              style={{ width: "8px", height: "8px" }}
+                            ></div>
+                            <span className="small fw-medium text-success">실시간 연결</span>
+                          </div>
+                          <div
+                            className="d-flex align-items-center px-3 py-2 rounded-3 border border-primary border-opacity-25"
+                            style={{ backgroundColor: "rgba(13, 110, 253, 0.1)" }}
+                          >
+                            <span className="small fw-medium text-primary">
+                              {new Date().toLocaleDateString("ko-KR", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div className="p-6">
-                  <div className="space-y-4">
-                    {recentOrders.map((order) => (
-                      <RecentOrderItem key={order.id} order={order} />
-                    ))}
-                  </div>
-                  <div className="mt-6">
-                    <button className="w-full bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 py-3 px-4 rounded-xl hover:from-blue-100 hover:to-purple-100 transition-all duration-200 border border-blue-200">
-                      모든 주문 보기
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 사이드바 영역 */}
-            <div className="space-y-6">
-              {/* 빠른 작업 */}
-              <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20">
-                <div className="p-6 border-b border-slate-200">
-                  <h2 className="text-xl font-bold text-slate-800">빠른 작업</h2>
-                </div>
-                <div className="p-6 space-y-4">
-                  {quickActions.map((action, index) => (
-                    <QuickActionButton
-                      key={index}
-                      title={action.title}
-                      description={action.description}
-                      icon={action.icon}
-                      color={action.color}
-                      onClick={action.onClick}
-                    />
-                  ))}
-                </div>
               </div>
 
-              {/* 재고 알림 */}
-              <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20">
-                <div className="p-6 border-b border-slate-200">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+              {/* 통계 카드 */}
+              <div className="row g-4 mb-4">
+                <div className="col-md-6 col-lg-3">
+                  <StatCard
+                    title="총 상품 수"
+                    value={stats.totalProducts.toLocaleString()}
+                    icon={
                       <svg
-                        className="w-4 h-4 text-red-600"
+                        width="24"
+                        height="24"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -477,40 +407,247 @@ const AdminDashboard = () => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                         />
                       </svg>
+                    }
+                    color="blue"
+                    trend="up"
+                    trendValue="+12%"
+                    description="지난 달 대비"
+                  />
+                </div>
+                <div className="col-md-6 col-lg-3">
+                  <StatCard
+                    title="총 주문 수"
+                    value={stats.totalOrders.toLocaleString()}
+                    icon={
+                      <svg
+                        width="24"
+                        height="24"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5"
+                        />
+                      </svg>
+                    }
+                    color="green"
+                    trend="up"
+                    trendValue="+8%"
+                    description="지난 달 대비"
+                  />
+                </div>
+                <div className="col-md-6 col-lg-3">
+                  <StatCard
+                    title="총 회원 수"
+                    value={stats.totalUsers.toLocaleString()}
+                    icon={
+                      <svg
+                        width="24"
+                        height="24"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+                        />
+                      </svg>
+                    }
+                    color="purple"
+                    trend="up"
+                    trendValue="+15%"
+                    description="지난 달 대비"
+                  />
+                </div>
+                <div className="col-md-6 col-lg-3">
+                  <StatCard
+                    title="총 매출"
+                    value={`₩${Math.floor(stats.totalRevenue / 10000).toLocaleString()}만`}
+                    icon={
+                      <svg
+                        width="24"
+                        height="24"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                        />
+                      </svg>
+                    }
+                    color="orange"
+                    trend="up"
+                    trendValue="+23%"
+                    description="지난 달 대비"
+                  />
+                </div>
+              </div>
+
+              {/* 메인 컨텐츠 그리드 */}
+              <div className="row g-4">
+                {/* 최근 주문 */}
+                <div className="col-lg-8">
+                  <div
+                    className="card border-0 shadow-sm"
+                    style={{ backgroundColor: "rgba(255, 255, 255, 0.9)" }}
+                  >
+                    <div className="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between p-4">
+                      <h5 className="mb-0 fw-bold">최근 주문</h5>
+                      <div className="d-flex align-items-center">
+                        <div
+                          className="rounded-circle bg-primary me-2"
+                          style={{ width: "12px", height: "12px", animation: "pulse 2s infinite" }}
+                        ></div>
+                        <span className="small text-muted">실시간 업데이트</span>
+                      </div>
                     </div>
-                    <h2 className="text-xl font-bold text-slate-800">재고 부족 알림</h2>
+                    <div className="card-body p-4">
+                      <div className="d-flex flex-column gap-3">
+                        {recentOrders.map((order) => (
+                          <RecentOrderItem key={order.id} order={order} />
+                        ))}
+                      </div>
+                      <div className="mt-4">
+                        <button
+                          className="btn btn-outline-primary w-100 rounded-3 py-2"
+                          style={{ backgroundColor: "rgba(13, 110, 253, 0.05)" }}
+                        >
+                          모든 주문 보기
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="p-6">
-                  <div className="space-y-4">
-                    {lowStockItems.map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-200"
-                      >
-                        <div>
-                          <p className="font-medium text-slate-800 text-sm">{item.name}</p>
-                          <p className="text-xs text-slate-600">재고: {item.stock}개</p>
-                        </div>
-                        <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-                          <span className="text-red-600 font-bold text-sm">{item.stock}</span>
+
+                {/* 사이드바 영역 */}
+                <div className="col-lg-4">
+                  <div className="d-flex flex-column gap-4">
+                    {/* 빠른 작업 */}
+                    <div
+                      className="card border-0 shadow-sm"
+                      style={{ backgroundColor: "rgba(255, 255, 255, 0.9)" }}
+                    >
+                      <div className="card-header bg-transparent border-bottom p-4">
+                        <h5 className="mb-0 fw-bold">빠른 작업</h5>
+                      </div>
+                      <div className="card-body p-4">
+                        {quickActions.map((action, index) => (
+                          <QuickActionButton
+                            key={index}
+                            title={action.title}
+                            description={action.description}
+                            icon={action.icon}
+                            color={action.color}
+                            onClick={action.onClick}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 재고 알림 */}
+                    <div
+                      className="card border-0 shadow-sm"
+                      style={{ backgroundColor: "rgba(255, 255, 255, 0.9)" }}
+                    >
+                      <div className="card-header bg-transparent border-bottom p-4">
+                        <div className="d-flex align-items-center">
+                          <div
+                            className="d-flex align-items-center justify-content-center rounded-2 me-3"
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              backgroundColor: "rgba(220, 53, 69, 0.1)",
+                            }}
+                          >
+                            <svg
+                              className="text-danger"
+                              width="16"
+                              height="16"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                              />
+                            </svg>
+                          </div>
+                          <h5 className="mb-0 fw-bold">재고 부족 알림</h5>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                  <div className="mt-4">
-                    <button className="w-full bg-gradient-to-r from-red-50 to-pink-50 text-red-700 py-3 px-4 rounded-xl hover:from-red-100 hover:to-pink-100 transition-all duration-200 border border-red-200">
-                      재고 관리로 이동
-                    </button>
+                      <div className="card-body p-4">
+                        <div className="d-flex flex-column gap-3">
+                          {lowStockItems.map((item, index) => (
+                            <div
+                              key={index}
+                              className="d-flex align-items-center justify-content-between p-3 rounded-3 border border-danger border-opacity-25"
+                              style={{ backgroundColor: "rgba(220, 53, 69, 0.05)" }}
+                            >
+                              <div>
+                                <h6 className="mb-1 fw-medium small">{item.name}</h6>
+                                <p className="mb-0 small text-muted">재고: {item.stock}개</p>
+                              </div>
+                              <div
+                                className="d-flex align-items-center justify-content-center rounded-2 text-danger fw-bold"
+                                style={{
+                                  width: "32px",
+                                  height: "32px",
+                                  backgroundColor: "rgba(220, 53, 69, 0.1)",
+                                }}
+                              >
+                                <span className="small">{item.stock}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-4">
+                          <button
+                            className="btn btn-outline-danger w-100 rounded-3 py-2"
+                            style={{ backgroundColor: "rgba(220, 53, 69, 0.05)" }}
+                          >
+                            재고 관리로 이동
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
+
+        <style jsx>{`
+          @keyframes pulse {
+            0%,
+            100% {
+              opacity: 1;
+            }
+            50% {
+              opacity: 0.5;
+            }
+          }
+          .hover-bg-light:hover {
+            background-color: rgba(248, 249, 250, 0.8) !important;
+          }
+        `}</style>
       </AdminLayout>
     </>
   );
