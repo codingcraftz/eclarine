@@ -13,6 +13,39 @@ function isMobile() {
   return window.innerWidth < 700;
 }
 
+// 토스트 알림 컴포넌트 추가
+function Toast({ message, type, onClose }) {
+  if (!message) return null;
+  return (
+    <div
+      style={{
+        position: "fixed",
+        bottom: 32,
+        left: "50%",
+        transform: "translateX(-50%)",
+        background: type === "error" ? "#ff4d4f" : "#0989FF",
+        color: "#fff",
+        padding: "12px 28px",
+        borderRadius: 8,
+        fontWeight: 500,
+        fontSize: 16,
+        zIndex: 9999,
+        boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+      }}
+      onClick={onClose}
+    >
+      {message}
+    </div>
+  );
+}
+
+const statusColor = {
+  결제확인대기: "#888",
+  결제확인: "#0989FF",
+  발송준비: "#FF9800",
+  발송완료: "#4CAF50",
+};
+
 const AdminOrderFormPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +56,16 @@ const AdminOrderFormPage = () => {
   const [imgUploading, setImgUploading] = useState(false);
   const [imgError, setImgError] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
+  const [filterStatus, setFilterStatus] = useState("전체");
+  const statusFilterOptions = [
+    { value: "전체", label: "전체" },
+    { value: "결제확인대기", label: "결제대기" },
+    { value: "발송준비", label: "발송준비" },
+    { value: "발송완료", label: "발송완료" },
+  ];
+  const filteredOrders =
+    filterStatus === "전체" ? orders : orders.filter((o) => o.status === filterStatus);
+  const [toast, setToast] = useState({ message: "", type: "success" });
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -53,7 +96,7 @@ const AdminOrderFormPage = () => {
   const handleStatusChange = async (id, newStatus) => {
     setUpdatingId(id);
     try {
-      const { error } = await supabaseService.supabase
+      const { error } = await supabase
         .from("order_form")
         .update({ status: newStatus })
         .eq("id", id);
@@ -62,10 +105,12 @@ const AdminOrderFormPage = () => {
       if (selectedOrder && selectedOrder.id === id) {
         setSelectedOrder({ ...selectedOrder, status: newStatus });
       }
+      setToast({ message: "상태가 변경되었습니다.", type: "success" });
     } catch (err) {
-      alert("상태 변경 중 오류 발생");
+      setToast({ message: "상태 변경 중 오류 발생", type: "error" });
     } finally {
       setUpdatingId(null);
+      setTimeout(() => setToast({ message: "", type: "success" }), 2000);
     }
   };
 
@@ -286,10 +331,10 @@ const AdminOrderFormPage = () => {
     );
   };
 
-  // 모바일 카드형 UI
-  const renderMobileList = () => (
+  // 모바일 카드형 UI 개선: 상태 드롭다운 추가
+  const renderMobileList = (list) => (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {orders.map((order) => (
+      {list.map((order) => (
         <div
           key={order.id}
           style={{
@@ -300,7 +345,6 @@ const AdminOrderFormPage = () => {
             fontSize: 15,
             minWidth: 0,
           }}
-          onClick={() => openOrderModal(order)}
         >
           <div style={{ fontWeight: 700, color: "#BD844C", marginBottom: 4, fontSize: 18 }}>
             {order.nickname}{" "}
@@ -310,17 +354,43 @@ const AdminOrderFormPage = () => {
             {order.created_at?.slice(0, 16).replace("T", " ")}
           </div>
           <div style={{ marginBottom: 4 }}>
-            <b>상태:</b> <span style={{ color: "#0989FF" }}>{order.status}</span>
+            <b>상태:</b>{" "}
+            <select
+              value={order.status}
+              onChange={(e) => handleStatusChange(order.id, e.target.value)}
+              disabled={updatingId === order.id}
+              style={{
+                minWidth: 110,
+                color: statusColor[order.status] || "#333",
+                fontWeight: 600,
+                border: updatingId === order.id ? "1.5px solid #0989FF" : "1px solid #ccc",
+                background: updatingId === order.id ? "#f0f8ff" : "#fff",
+                borderRadius: 6,
+                padding: "2px 8px",
+                outline: "none",
+                marginLeft: 4,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {statusOptions.map((opt) => (
+                <option key={opt.value} value={opt.value} style={{ color: statusColor[opt.value] }}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            {updatingId === order.id && (
+              <span style={{ marginLeft: 6, color: "#0989FF", fontSize: 13 }}>⏳</span>
+            )}
           </div>
-          <div style={{ marginBottom: 4 }}>
+          <div style={{ fontSize: 15, marginBottom: 8 }}>
             <b>주소:</b> {order.address}{" "}
             <span style={{ color: "#888" }}>{order.address_detail}</span>
           </div>
-          <div style={{ marginBottom: 4 }}>
-            <b>결제:</b> {order.payment}
+          <div style={{ fontSize: 15, marginBottom: 8 }}>
+            <b>결제방법:</b> {order.payment}
           </div>
-          <div style={{ marginBottom: 4 }}>
-            <b>캡쳐:</b> {order.capture_urls?.length || 0}장
+          <div style={{ fontSize: 15, marginBottom: 8 }}>
+            <b>캡쳐사진:</b> {order.capture_urls?.length || 0}장
           </div>
           <div style={{ marginTop: 8, display: "flex", gap: 4, flexWrap: "wrap" }}>
             {order.capture_urls &&
@@ -349,6 +419,24 @@ const AdminOrderFormPage = () => {
                 </a>
               ))}
           </div>
+          <div style={{ marginTop: 8 }}>
+            <button
+              onClick={() => openOrderModal(order)}
+              style={{
+                background: "#f3f4f6",
+                color: "#0989FF",
+                border: 0,
+                borderRadius: 6,
+                padding: "6px 14px",
+                fontWeight: 500,
+                fontSize: 14,
+                cursor: "pointer",
+                marginTop: 4,
+              }}
+            >
+              상세 보기
+            </button>
+          </div>
         </div>
       ))}
       {showModal && renderOrderDetail()}
@@ -362,14 +450,35 @@ const AdminOrderFormPage = () => {
       >
         에끌라린 주문서 관리
       </h2>
+      {/* 상태별 필터 버튼 */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+        {statusFilterOptions.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => setFilterStatus(opt.value)}
+            style={{
+              background: filterStatus === opt.value ? "#0989FF" : "#f3f4f6",
+              color: filterStatus === opt.value ? "#fff" : "#333",
+              border: 0,
+              borderRadius: 6,
+              padding: "8px 16px",
+              fontWeight: 500,
+              fontSize: 15,
+              cursor: "pointer",
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
       {loading ? (
         <div>로딩 중...</div>
       ) : error ? (
         <div style={{ color: "red" }}>{error}</div>
-      ) : orders.length === 0 ? (
+      ) : filteredOrders.length === 0 ? (
         <div>주문 내역이 없습니다.</div>
       ) : isMobileView ? (
-        renderMobileList()
+        renderMobileList(filteredOrders)
       ) : (
         <div style={{ overflowX: "auto" }}>
           <table
@@ -390,33 +499,64 @@ const AdminOrderFormPage = () => {
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => (
-                <tr
-                  key={order.id}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => openOrderModal(order)}
-                >
-                  <td>{order.created_at?.slice(0, 16).replace("T", " ")}</td>
-                  <td>{order.nickname}</td>
-                  <td>{order.name}</td>
-                  <td>{order.phone}</td>
-                  <td>
+              {filteredOrders.map((order) => (
+                <tr key={order.id} style={{ cursor: "pointer" }}>
+                  <td onClick={() => openOrderModal(order)}>
+                    {order.created_at?.slice(0, 16).replace("T", " ")}
+                  </td>
+                  <td onClick={() => openOrderModal(order)}>{order.nickname}</td>
+                  <td onClick={() => openOrderModal(order)}>{order.name}</td>
+                  <td onClick={() => openOrderModal(order)}>{order.phone}</td>
+                  <td onClick={() => openOrderModal(order)}>
                     {order.address}
                     <br />
                     <span style={{ color: "#888", fontSize: 13 }}>{order.address_detail}</span>
                   </td>
-                  <td>{order.payment}</td>
+                  <td onClick={() => openOrderModal(order)}>{order.payment}</td>
                   <td>
-                    <span style={{ color: "#0989FF" }}>{order.status}</span>
+                    <select
+                      value={order.status}
+                      onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                      disabled={updatingId === order.id}
+                      style={{
+                        minWidth: 110,
+                        color: statusColor[order.status] || "#333",
+                        fontWeight: 600,
+                        border: updatingId === order.id ? "1.5px solid #0989FF" : "1px solid #ccc",
+                        background: updatingId === order.id ? "#f0f8ff" : "#fff",
+                        borderRadius: 6,
+                        padding: "2px 8px",
+                        outline: "none",
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {statusOptions.map((opt) => (
+                        <option
+                          key={opt.value}
+                          value={opt.value}
+                          style={{ color: statusColor[opt.value] }}
+                        >
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    {updatingId === order.id && (
+                      <span style={{ marginLeft: 6, color: "#0989FF", fontSize: 13 }}>⏳</span>
+                    )}
                   </td>
-                  <td>
+                  <td onClick={() => openOrderModal(order)}>
                     {order.capture_urls && order.capture_urls.length > 0 ? (
                       <span>{order.capture_urls.length}장</span>
                     ) : (
                       <span style={{ color: "#aaa" }}>없음</span>
                     )}
                   </td>
-                  <td style={{ maxWidth: 180, wordBreak: "break-all" }}>{order.request}</td>
+                  <td
+                    style={{ maxWidth: 180, wordBreak: "break-all" }}
+                    onClick={() => openOrderModal(order)}
+                  >
+                    {order.request}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -424,6 +564,11 @@ const AdminOrderFormPage = () => {
         </div>
       )}
       {showModal && renderOrderDetail()}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: "", type: "success" })}
+      />
     </div>
   );
 };

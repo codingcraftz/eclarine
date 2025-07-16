@@ -11,6 +11,10 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  // 관리자 계정 정보(코드 외부에서 관리 가능)
+  const ADMIN_ID = process.env.NEXT_PUBLIC_ADMIN_ID || "admin";
+  const ADMIN_PW = process.env.NEXT_PUBLIC_ADMIN_PW || "admin123";
+
   const handleChange = (e) => {
     setCredentials({
       ...credentials,
@@ -23,20 +27,20 @@ const AdminLogin = () => {
     setIsLoading(true);
     setError("");
 
-    // 간단한 하드코딩된 인증
-    if (credentials.username === "admin" && credentials.password === "admin123") {
+    // 하드코딩된 인증 (UI에 노출X)
+    if (credentials.username === ADMIN_ID && credentials.password === ADMIN_PW) {
       // 세션 저장
       localStorage.setItem("adminAuth", "true");
       localStorage.setItem(
         "adminUser",
         JSON.stringify({
-          username: "admin",
+          username: ADMIN_ID,
           role: "admin",
           loginTime: new Date().toISOString(),
         })
       );
 
-      // 대시보드로 리다이렉트
+      // 대시보드로 이동
       router.push("/admin/dashboard");
     } else {
       setError("아이디 또는 비밀번호가 올바르지 않습니다.");
@@ -56,6 +60,8 @@ const AdminLogin = () => {
         className="min-vh-100 d-flex align-items-center justify-content-center position-relative"
         style={{
           background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          minHeight: "100vh",
+          padding: "0 8px",
         }}
       >
         {/* 배경 패턴 */}
@@ -92,104 +98,81 @@ const AdminLogin = () => {
           />
         </div>
 
-        <div className="container position-relative" style={{ zIndex: 10 }}>
+        <div
+          className="container position-relative"
+          style={{ zIndex: 10, maxWidth: 420, width: "100%" }}
+        >
           <div className="row justify-content-center">
-            <div className="col-md-6 col-lg-4">
+            <div className="col-12">
               {/* 메인 로그인 카드 */}
               <div
                 className="card shadow-lg border-0 rounded-4 overflow-hidden"
-                style={{ backgroundColor: "rgba(255, 255, 255, 0.95)" }}
+                style={{ backgroundColor: "rgba(255, 255, 255, 0.95)", minWidth: 0 }}
               >
                 {/* 브랜드 헤더 */}
                 <div
-                  className="text-center py-5 px-4"
+                  className="text-center py-4 px-2"
                   style={{ background: "linear-gradient(to right, #f8fafc, #e0f2fe)" }}
                 >
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <div
-                      className="d-inline-flex align-items-center justify-content-center rounded-3 shadow-lg mb-3"
+                      className="d-inline-flex align-items-center justify-content-center rounded-3 shadow-lg mb-2"
                       style={{
-                        width: "80px",
-                        height: "80px",
+                        width: "64px",
+                        height: "64px",
                         background: "linear-gradient(to right, #3b82f6, #8b5cf6)",
                       }}
                     >
-                      <span className="text-white fs-3 fw-bold">E</span>
+                      <span className="text-white fs-3 fw-bold" style={{ fontSize: 32 }}>
+                        E
+                      </span>
                     </div>
-                    <h1 className="fs-2 fw-bold text-primary mb-2">ECLARINE</h1>
-                    <p className="text-muted small">프리미엄 주얼리 관리 시스템</p>
+                    <h1 className="fs-4 fw-bold text-primary mb-1" style={{ fontSize: 22 }}>
+                      ECLARINE
+                    </h1>
+                    <p className="text-muted small" style={{ fontSize: 13 }}>
+                      프리미엄 주얼리 관리 시스템
+                    </p>
                   </div>
                 </div>
 
                 {/* 로그인 폼 */}
-                <div className="card-body p-4">
+                <div className="card-body p-3">
                   <form onSubmit={handleSubmit}>
                     {/* 관리자 아이디 */}
                     <div className="mb-3">
-                      <label className="form-label fw-semibold text-dark">관리자 아이디</label>
-                      <div className="position-relative">
-                        <input
-                          type="text"
-                          name="username"
-                          value={credentials.username}
-                          onChange={handleChange}
-                          placeholder="관리자 아이디를 입력하세요"
-                          required
-                          className="form-control form-control-lg bg-light border-2 rounded-3"
-                          style={{ paddingRight: "3rem" }}
-                        />
-                        <div className="position-absolute top-50 end-0 translate-middle-y me-3">
-                          <svg
-                            className="text-muted"
-                            width="20"
-                            height="20"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                            />
-                          </svg>
-                        </div>
-                      </div>
+                      <label className="form-label fw-semibold text-dark" style={{ fontSize: 15 }}>
+                        관리자 아이디
+                      </label>
+                      <input
+                        type="text"
+                        name="username"
+                        value={credentials.username}
+                        onChange={handleChange}
+                        placeholder="관리자 아이디를 입력하세요"
+                        required
+                        className="form-control form-control-lg bg-light border-2 rounded-3"
+                        style={{ fontSize: 15, padding: "12px 16px" }}
+                        autoComplete="username"
+                      />
                     </div>
 
                     {/* 비밀번호 */}
                     <div className="mb-3">
-                      <label className="form-label fw-semibold text-dark">비밀번호</label>
-                      <div className="position-relative">
-                        <input
-                          type="password"
-                          name="password"
-                          value={credentials.password}
-                          onChange={handleChange}
-                          placeholder="비밀번호를 입력하세요"
-                          required
-                          className="form-control form-control-lg bg-light border-2 rounded-3"
-                          style={{ paddingRight: "3rem" }}
-                        />
-                        <div className="position-absolute top-50 end-0 translate-middle-y me-3">
-                          <svg
-                            className="text-muted"
-                            width="20"
-                            height="20"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                            />
-                          </svg>
-                        </div>
-                      </div>
+                      <label className="form-label fw-semibold text-dark" style={{ fontSize: 15 }}>
+                        비밀번호
+                      </label>
+                      <input
+                        type="password"
+                        name="password"
+                        value={credentials.password}
+                        onChange={handleChange}
+                        placeholder="비밀번호를 입력하세요"
+                        required
+                        className="form-control form-control-lg bg-light border-2 rounded-3"
+                        style={{ fontSize: 15, padding: "12px 16px" }}
+                        autoComplete="current-password"
+                      />
                     </div>
 
                     {/* 에러 메시지 */}
@@ -197,137 +180,28 @@ const AdminLogin = () => {
                       <div
                         className="alert alert-danger d-flex align-items-center mb-3"
                         role="alert"
+                        style={{ fontSize: 14 }}
                       >
-                        <svg
-                          className="me-2"
-                          width="20"
-                          height="20"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
                         {error}
                       </div>
                     )}
 
-                    {/* 로그인 버튼 */}
                     <button
                       type="submit"
-                      disabled={isLoading}
-                      className="btn btn-lg w-100 fw-semibold py-3 rounded-3 shadow-sm"
+                      className="btn btn-primary w-100"
                       style={{
-                        background: "linear-gradient(to right, #3b82f6, #8b5cf6)",
-                        border: "none",
-                        color: "white",
+                        background: "#BD844C",
+                        border: 0,
+                        fontSize: 16,
+                        padding: "12px 0",
+                        borderRadius: 8,
                       }}
+                      disabled={isLoading}
                     >
-                      {isLoading ? (
-                        <div className="d-flex align-items-center justify-content-center">
-                          <div
-                            className="spinner-border spinner-border-sm me-2"
-                            role="status"
-                            aria-hidden="true"
-                          ></div>
-                          로그인 중...
-                        </div>
-                      ) : (
-                        <div className="d-flex align-items-center justify-content-center">
-                          <svg
-                            className="me-2"
-                            width="20"
-                            height="20"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                            />
-                          </svg>
-                          관리자 로그인
-                        </div>
-                      )}
+                      {isLoading ? "로그인 중..." : "로그인"}
                     </button>
                   </form>
-
-                  {/* 브랜드 메시지 */}
-                  <div className="mt-4 text-center">
-                    <div
-                      className="bg-light rounded-3 p-3 border"
-                      style={{ borderColor: "rgba(13, 110, 253, 0.25)" }}
-                    >
-                      <div className="d-flex align-items-center justify-content-center mb-2">
-                        <svg
-                          className="text-primary me-2"
-                          width="20"
-                          height="20"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13 10V3L4 14h7v7l9-11h-7z"
-                          />
-                        </svg>
-                        <span className="small fw-semibold text-primary">에끌라린 관리 시스템</span>
-                      </div>
-                      <p className="small text-primary mb-0">
-                        프리미엄 주얼리 브랜드의 전문적인 관리 도구
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* 테스트 계정 정보 */}
-                  <div className="mt-3 text-center">
-                    <div
-                      className="rounded-3 p-3 border"
-                      style={{
-                        backgroundColor: "rgba(255, 193, 7, 0.1)",
-                        borderColor: "rgba(255, 193, 7, 0.25)",
-                      }}
-                    >
-                      <div className="d-flex align-items-center justify-content-center mb-2">
-                        <svg
-                          className="text-warning me-2"
-                          width="16"
-                          height="16"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span className="small fw-semibold text-warning">테스트 계정</span>
-                      </div>
-                      <p className="small text-warning mb-0">ID: admin / PW: admin123</p>
-                    </div>
-                  </div>
                 </div>
-              </div>
-
-              {/* 하단 링크 */}
-              <div className="text-center mt-4">
-                <p className="small" style={{ color: "rgba(255, 255, 255, 0.8)" }}>
-                  © 2024 에끌라린 (구름섬컴퍼니). All Rights Reserved.
-                </p>
               </div>
             </div>
           </div>
