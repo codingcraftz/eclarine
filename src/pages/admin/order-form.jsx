@@ -238,7 +238,7 @@ const AdminOrderFormPage = () => {
       const newUrls = uploadResults.map((r) => r.publicUrl);
       // DB에 추가
       const updatedUrls = [...(selectedOrder.capture_urls || []), ...newUrls];
-      const { error } = await supabaseService.supabase
+      const { error } = await supabase
         .from("order_form")
         .update({ capture_urls: updatedUrls })
         .eq("id", selectedOrder.id);
@@ -265,7 +265,7 @@ const AdminOrderFormPage = () => {
       await supabaseService.supabase.storage.from("order-captures").remove([path]);
       // DB에서 제거
       const updatedUrls = selectedOrder.capture_urls.filter((u, i) => i !== idx);
-      const { error } = await supabaseService.supabase
+      const { error } = await supabase
         .from("order_form")
         .update({ capture_urls: updatedUrls })
         .eq("id", selectedOrder.id);
