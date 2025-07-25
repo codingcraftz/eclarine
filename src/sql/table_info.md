@@ -519,6 +519,28 @@ USING (bucket_id = 'product-images' AND auth.role() = 'authenticated');
 - status: '결제확인대기', '결제확인', '발송준비', '발송완료' 등
 - capture_urls: ["url1", "url2", ...]
 
+## order_form_images 테이블
+
+```sql
+create table order_form_images (
+  id uuid default uuid_generate_v4() primary key,
+  order_id uuid references order_form(id) on delete cascade,
+  image_url text not null,
+  image_status text default '준비전' check (image_status in ('준비전', '준비완료', '주문접수', '주문접수 완료')),
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- RLS 정책
+alter table order_form_images enable row level security;
+
+create policy "모든 사용자가 이미지를 볼 수 있음" on order_form_images
+  for select using (true);
+
+create policy "관리자만 이미지 상태를 수정할 수 있음" on order_form_images
+  for update using (auth.role() = 'authenticated')
+  with check (auth.role() = 'authenticated');
+```
+
 ## 2024-06-13 order_form 테이블 RLS 정책(모든 사용자 update/delete 허용)
 
 - 모든 사용자(anon, authenticated)에게 update, delete 허용

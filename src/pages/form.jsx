@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { supabaseService } from "../lib/supabase";
 import { notifySuccess } from "../utils/toast";
@@ -42,6 +42,9 @@ const tossUrl = `supertoss://send?bank=${encodeURIComponent(accountInfo.bank)}&a
   accountInfo.accountNumber
 }&origin=${encodeURIComponent(accountInfo.tossOrigin)}`;
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/heic", "image/heif"];
+
 const FormPage = () => {
   const [form, setForm] = useState(initialState);
   const [showPostcode, setShowPostcode] = useState(false);
@@ -75,15 +78,216 @@ const FormPage = () => {
     }
   };
 
+  // 파일 URL 정리를 위한 useEffect
+  useEffect(() => {
+    return () => {
+      // 컴포넌트 언마운트 시 URL 정리
+      form.files.forEach((file) => {
+        if (file.preview) {
+          URL.revokeObjectURL(file.preview);
+        }
+      });
+    };
+  }, [form.files]);
+
+  // 에러 메시지 포맷팅 함수 추가
+  const formatErrorMessage = (error) => {
+    if (error.includes("Failed to fetch") || error.includes("NetworkError")) {
+      return {
+        title: "네트워크 연결 오류",
+        message: "인터넷 연결이 불안정합니다. 와이파이나 데이터 연결을 확인해주세요.",
+        contact: true,
+      };
+    }
+
+    if (error.includes("timeout") || error.includes("AbortError")) {
+      return {
+        title: "요청 시간 초과",
+        message: "서버 응답이 늦어지고 있습니다. 잠시 후 다시 시도해주세요.",
+        contact: true,
+      };
+    }
+
+    if (error.includes("업로드 실패")) {
+      return {
+        title: "이미지 업로드 실패",
+        message:
+          "이미지 업로드 중 문제가 발생했습니다. 이미지 크기를 줄이거나 다른 이미지로 시도해주세요.",
+        contact: true,
+      };
+    }
+
+    if (error.includes("storage/object-too-large")) {
+      return {
+        title: "파일 크기 초과",
+        message: "이미지 크기가 너무 큽니다. 더 작은 크기의 이미지를 선택해주세요. (최대 5MB)",
+        contact: false,
+      };
+    }
+
+    return {
+      title: "주문서 제출 실패",
+      message: "죄송합니다. 주문서 제출 중 문제가 발생했습니다.",
+      contact: true,
+    };
+  };
+
+  // 파일 유효성 검사
+  const validateFile = (file) => {
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      return "지원하지 않는 파일 형식입니다. JPG 또는 PNG 이미지만 업로드 가능합니다.";
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return `파일 크기가 너무 큽니다. (현재: ${(file.size / 1024 / 1024).toFixed(
+        1
+      )}MB, 최대: 5MB)`;
+    }
+    return null;
+  };
+
+  // 이미지 리사이즈
+  const resizeImage = async (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+
+          // 최대 크기 설정
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 1200;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              const resizedFile = new File([blob], file.name, {
+                type: "image/jpeg",
+                lastModified: Date.now(),
+              });
+              resolve(resizedFile);
+            },
+            "image/jpeg",
+            0.8
+          );
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   // 파일 업로드 (여러 번 추가 가능)
-  const handleFileChange = (e) => {
-    const newFiles = Array.from(e.target.files);
-    // 중복 파일 방지(이름+사이즈 기준)
-    const allFiles = [...form.files, ...newFiles].filter(
-      (file, idx, arr) => arr.findIndex((f) => f.name === file.name && f.size === file.size) === idx
-    );
-    setForm({ ...form, files: allFiles });
-    e.target.value = null; // 같은 파일 다시 선택 가능하게
+  const handleFileChange = async (e) => {
+    try {
+      const selectedFiles = Array.from(e.target.files || []);
+      const newFiles = [];
+      const errors = [];
+
+      for (const file of selectedFiles) {
+        const error = validateFile(file);
+        if (error) {
+          errors.push(`${file.name}: ${error}`);
+          continue;
+        }
+
+        try {
+          // 이미지 리사이즈
+          const resizedFile = await resizeImage(file);
+          // 미리보기 URL 생성
+          resizedFile.preview = URL.createObjectURL(resizedFile);
+          newFiles.push(resizedFile);
+        } catch (err) {
+          console.error("이미지 처리 중 오류:", err);
+          errors.push(`${file.name}: 이미지를 처리할 수 없습니다. 다른 이미지를 선택해주세요.`);
+        }
+      }
+
+      if (errors.length > 0) {
+        setSubmitError(
+          <div
+            style={{
+              background: "#FFF5F5",
+              border: "1px solid #FEB2B2",
+              borderRadius: "8px",
+              padding: "16px",
+              marginTop: "16px",
+            }}
+          >
+            <div
+              style={{
+                color: "#C53030",
+                fontWeight: "bold",
+                marginBottom: "8px",
+              }}
+            >
+              이미지 업로드 실패
+            </div>
+            {errors.map((error, idx) => (
+              <div key={idx} style={{ color: "#2D3748", marginBottom: "4px" }}>
+                • {error}
+              </div>
+            ))}
+          </div>
+        );
+        return;
+      }
+
+      // 중복 파일 방지(이름+사이즈 기준)
+      const allFiles = [...form.files, ...newFiles].filter(
+        (file, idx, arr) =>
+          arr.findIndex((f) => f.name === file.name && f.size === file.size) === idx
+      );
+
+      setForm({ ...form, files: allFiles });
+    } catch (err) {
+      console.error("파일 선택 중 오류:", err);
+      setSubmitError(
+        <div
+          style={{
+            background: "#FFF5F5",
+            border: "1px solid #FEB2B2",
+            borderRadius: "8px",
+            padding: "16px",
+            marginTop: "16px",
+          }}
+        >
+          <div
+            style={{
+              color: "#C53030",
+              fontWeight: "bold",
+              marginBottom: "8px",
+            }}
+          >
+            이미지 선택 오류
+          </div>
+          <div style={{ color: "#2D3748" }}>
+            이미지를 선택하는 중 문제가 발생했습니다. 다시 시도해주세요.
+          </div>
+        </div>
+      );
+    } finally {
+      if (e.target) e.target.value = null;
+    }
   };
 
   // 파일 개별 삭제
@@ -111,13 +315,27 @@ const FormPage = () => {
     setSubmitError("");
     if (!validate()) return;
     setLoading(true);
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000); // 30초 타임아웃
+
     try {
       // 1. 파일 업로드
       let captureUrls = [];
       if (form.files.length > 0) {
-        const uploadResults = await supabaseService.uploadOrderCaptures(form.files);
-        captureUrls = uploadResults.map((r) => r.publicUrl);
+        const uploadPromises = form.files.map(async (file) => {
+          try {
+            const result = await supabaseService.uploadOrderCaptures([file]);
+            return result[0].publicUrl;
+          } catch (err) {
+            console.error("파일 업로드 중 오류:", err);
+            throw new Error(`${file.name} 업로드 실패`);
+          }
+        });
+
+        captureUrls = await Promise.all(uploadPromises);
       }
+
       // 2. 주문 데이터 저장
       const orderData = {
         nickname: form.nickname,
@@ -131,13 +349,53 @@ const FormPage = () => {
         capture_urls: captureUrls,
         amount: form.amount,
       };
-      await supabaseService.createOrderForm(orderData);
+
+      const result = await supabaseService.createOrderForm(orderData);
+      if (!result) throw new Error("주문 데이터 저장 실패");
+
       setLastPayment(form.payment);
       setShowSubmitModal(true);
       setForm(initialState);
     } catch (err) {
-      setSubmitError("주문 접수 중 오류가 발생했습니다. 다시 시도해주세요.");
+      console.error("주문 접수 중 오류:", err);
+      const errorInfo = formatErrorMessage(err.message || err.toString());
+      setSubmitError(
+        <div
+          style={{
+            background: "#FFF5F5",
+            border: "1px solid #FEB2B2",
+            borderRadius: "8px",
+            padding: "16px",
+            marginTop: "16px",
+          }}
+        >
+          <div
+            style={{
+              color: "#C53030",
+              fontWeight: "bold",
+              marginBottom: "8px",
+            }}
+          >
+            {errorInfo.title}
+          </div>
+          <div style={{ color: "#2D3748" }}>{errorInfo.message}</div>
+          {errorInfo.contact && (
+            <div
+              style={{
+                marginTop: "12px",
+                fontSize: "14px",
+                color: "#4A5568",
+              }}
+            >
+              💡 문제가 계속되면 아래 카카오톡으로 문의 부탁드립니다.
+              <br />
+              에러코드: {err.code || "ERR_" + Date.now().toString(36)}
+            </div>
+          )}
+        </div>
+      );
     } finally {
+      clearTimeout(timeout);
       setLoading(false);
     }
   };
@@ -260,13 +518,26 @@ const FormPage = () => {
                     }}
                   >
                     <img
-                      src={URL.createObjectURL(file)}
+                      src={file.preview}
                       alt={file.name}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "/assets/img/placeholder.png"; // 에러 시 기본 이미지
+                      }}
                     />
                     <button
                       type="button"
-                      onClick={() => handleRemoveFile(idx)}
+                      onClick={() => {
+                        if (file.preview) {
+                          URL.revokeObjectURL(file.preview);
+                        }
+                        handleRemoveFile(idx);
+                      }}
                       style={{
                         position: "absolute",
                         top: 2,
@@ -279,6 +550,7 @@ const FormPage = () => {
                         height: 18,
                         fontSize: 12,
                         cursor: "pointer",
+                        zIndex: 1,
                       }}
                       title="삭제"
                     >
@@ -391,7 +663,7 @@ const FormPage = () => {
           >
             {loading ? "제출 중..." : "주문서 제출"}
           </button>
-          {submitError && <div style={{ color: "red", marginTop: 8 }}>{submitError}</div>}
+          {submitError && <div style={{ marginTop: 16 }}>{submitError}</div>}
         </form>
         {showSubmitModal && (
           <div
