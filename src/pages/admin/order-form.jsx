@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { supabaseService, supabase } from "../../lib/supabase";
+import { supabase } from "../../lib/supabase";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
+import { toast } from "react-toastify";
+
+const IMAGE_STATUS_OPTIONS = [
+  { value: "준비전", label: "준비전", color: "#888" },
+  { value: "준비완료", label: "준비완료", color: "#4CAF50" },
+  { value: "주문접수", label: "주문접수", color: "#2196F3" },
+  { value: "주문접수 완료", label: "주문접수 완료", color: "#9C27B0" },
+];
 
 const statusOptions = [
   { value: "결제확인대기", label: "결제확인대기" },
@@ -82,6 +90,8 @@ const AdminOrderFormPage = () => {
   // 정렬 및 검색 상태 추가
   const [orderAsc, setOrderAsc] = useState(false); // false: 내림차순(최신순), true: 오름차순(과거순)
   const [searchText, setSearchText] = useState("");
+  const [selectedImageIndex, setSelectedImageIndex] = useState(-1);
+  const [orderImages, setOrderImages] = useState([]);
 
   // 검색 및 정렬 적용된 주문 목록
   const filteredOrders = (
@@ -234,9 +244,28 @@ const AdminOrderFormPage = () => {
     setImgUploading(true);
     try {
       const files = Array.from(e.target.files);
-      const uploadResults = await supabaseService.uploadOrderCaptures(files);
-      const newUrls = uploadResults.map((r) => r.publicUrl);
-      // DB에 추가
+      // const uploadResults = await supabaseService.uploadOrderCaptures(files); // supabaseService 사용 중단
+      // const newUrls = uploadResults.map((r) => r.publicUrl); // supabaseService 사용 중단
+      // DB에 추가 // supabaseService 사용 중단
+      // const updatedUrls = [...(selectedOrder.capture_urls || []), ...newUrls]; // supabaseService 사용 중단
+      // const { error } = await supabase // supabaseService 사용 중단
+      //   .from("order_form") // supabaseService 사용 중단
+      //   .update({ capture_urls: updatedUrls }) // supabaseService 사용 중단
+      //   .eq("id", selectedOrder.id); // supabaseService 사용 중단
+      // if (error) throw error; // supabaseService 사용 중단
+      // setSelectedOrder((prev) => ({ ...prev, capture_urls: updatedUrls })); // supabaseService 사용 중단
+      // setOrders((prev) => // supabaseService 사용 중단
+      //   prev.map((o) => (o.id === selectedOrder.id ? { ...o, capture_urls: updatedUrls } : o)) // supabaseService 사용 중단
+      // ); // supabaseService 사용 중단
+      // 임시 로직: 파일 업로드 후 이미지 URL 생성 (실제 업로드는 별도 서버 필요)
+      const newUrls = await Promise.all(
+        files.map(async (file) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          await new Promise((resolve) => (reader.onload = resolve));
+          return reader.result;
+        })
+      );
       const updatedUrls = [...(selectedOrder.capture_urls || []), ...newUrls];
       const { error } = await supabase
         .from("order_form")
@@ -262,7 +291,7 @@ const AdminOrderFormPage = () => {
     try {
       // 파일 경로 추출
       const path = url.split("/order-captures/")[1];
-      await supabaseService.supabase.storage.from("order-captures").remove([path]);
+      // await supabaseService.supabase.storage.from("order-captures").remove([path]); // supabaseService 사용 중단
       // DB에서 제거
       const updatedUrls = selectedOrder.capture_urls.filter((u, i) => i !== idx);
       const { error } = await supabase
@@ -704,6 +733,146 @@ const AdminOrderFormPage = () => {
     </div>
   );
 
+  // 이미지 상태 업데이트 함수
+  const updateImageStatus = async (imageId, newStatus) => {
+    try {
+      const { error } = await supabase
+        .from("order_form_images")
+        .update({ image_status: newStatus })
+        .eq("id", imageId);
+
+      if (error) throw error;
+
+      // 로컬 상태 업데이트
+      setOrders((prevOrders) =>
+        prevOrders.map((order) => ({
+          ...order,
+          images: order.images.map((img) =>
+            img.id === imageId ? { ...img, image_status: newStatus } : img
+          ),
+        }))
+      );
+
+      // orderImages 상태도 업데이트
+      setOrderImages((prevImages) =>
+        prevImages.map((img) => (img.id === imageId ? { ...img, image_status: newStatus } : img))
+      );
+
+      toast.success("이미지 상태가 업데이트되었습니다.");
+    } catch (error) {
+      console.error("이미지 상태 업데이트 실패:", error);
+      toast.error("이미지 상태 업데이트에 실패했습니다.");
+    }
+  };
+
+  // 커스텀 툴바 컴포넌트
+  const CustomToolbar = ({ currentIndex }) => {
+    const currentImage = orderImages[currentIndex];
+
+    if (!currentImage?.id) return null;
+
+    return (
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: "20px",
+          background: "rgba(0,0,0,0.7)",
+          display: "flex",
+          justifyContent: "center",
+          gap: "10px",
+          zIndex: 1000,
+        }}
+      >
+        {IMAGE_STATUS_OPTIONS.map((option) => (
+          <button
+            key={option.value}
+            onClick={() => updateImageStatus(currentImage.id, option.value)}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "4px",
+              border: "none",
+              background: currentImage.image_status === option.value ? option.color : "#444",
+              color: "white",
+              cursor: "pointer",
+              opacity: currentImage.image_status === option.value ? 1 : 0.7,
+              fontSize: "14px",
+              transition: "all 0.2s ease",
+            }}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  // 이미지 그리드 렌더링
+  const renderImages = (images) => {
+    if (!images || images.length === 0) {
+      return <div>이미지가 없습니다.</div>;
+    }
+
+    return (
+      <div
+        style={{
+          display: "flex",
+          gap: "10px",
+          overflowX: "auto",
+          padding: "10px 0",
+          maxWidth: "100%",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
+        {images.map((image, index) => (
+          <div
+            key={image.id}
+            style={{
+              position: "relative",
+              minWidth: "150px",
+              maxWidth: "150px",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: "8px",
+                left: "8px",
+                background:
+                  IMAGE_STATUS_OPTIONS.find((opt) => opt.value === image.image_status)?.color ||
+                  "#888",
+                color: "white",
+                padding: "4px 8px",
+                borderRadius: "4px",
+                fontSize: "12px",
+                zIndex: 1,
+              }}
+            >
+              {image.image_status || "준비전"}
+            </div>
+            <img
+              src={image.image_url}
+              alt={`주문 이미지 ${index + 1}`}
+              style={{
+                width: "150px",
+                height: "150px",
+                objectFit: "cover",
+                borderRadius: "8px",
+                cursor: "pointer",
+              }}
+              onClick={() => {
+                setSelectedImageIndex(index);
+                setOrderImages(images);
+              }}
+            />
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div style={{ maxWidth: 1100, margin: "40px auto", padding: 12 }}>
       <h2
@@ -889,6 +1058,22 @@ const AdminOrderFormPage = () => {
         message={toast.message}
         type={toast.type}
         onClose={() => setToast({ message: "", type: "success" })}
+      />
+
+      {/* 이미지 뷰어 */}
+      <Lightbox
+        open={selectedImageIndex >= 0}
+        close={() => setSelectedImageIndex(-1)}
+        index={selectedImageIndex}
+        slides={orderImages.map((img) => ({ src: img.image_url }))}
+        plugins={[]}
+        animation={{ fade: 300 }}
+        carousel={{ finite: true }}
+        render={{
+          buttonPrev: orderImages.length <= 1 ? () => null : undefined,
+          buttonNext: orderImages.length <= 1 ? () => null : undefined,
+          toolbar: () => <CustomToolbar currentIndex={selectedImageIndex} />,
+        }}
       />
     </div>
   );
