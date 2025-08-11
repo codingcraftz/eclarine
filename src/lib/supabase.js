@@ -5,6 +5,132 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// 카카오 로그인 처리
+export const signInWithKakao = async (kakaoToken) => {
+  try {
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: "kakao",
+      token: kakaoToken,
+    });
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("카카오 로그인 실패:", error);
+    throw error;
+  }
+};
+
+// 사용자 정보 저장/업데이트
+export const upsertUserProfile = async (userData) => {
+  try {
+    const { data, error } = await supabase
+      .from("users")
+      .upsert({
+        id: userData.id,
+        kakao_id: userData.kakao_id,
+        email: userData.email,
+        name: userData.name,
+        phone: userData.phone,
+        profile_image: userData.profile_image,
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("사용자 정보 저장 실패:", error);
+    throw error;
+  }
+};
+
+// 사용자 주소 관리
+export const addressService = {
+  // 주소 목록 조회
+  getAddresses: async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .from("user_addresses")
+        .select("*")
+        .eq("user_id", userId)
+        .order("is_default", { ascending: false })
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("주소 목록 조회 실패:", error);
+      throw error;
+    }
+  },
+
+  // 주소 추가
+  addAddress: async (userId, addressData) => {
+    try {
+      const { data, error } = await supabase
+        .from("user_addresses")
+        .insert({
+          user_id: userId,
+          recipient_name: addressData.recipient_name,
+          phone: addressData.phone,
+          address_line1: addressData.address_line1,
+          address_line2: addressData.address_line2,
+          postal_code: addressData.postal_code,
+          is_default: addressData.is_default,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("주소 추가 실패:", error);
+      throw error;
+    }
+  },
+
+  // 주소 수정
+  updateAddress: async (addressId, addressData) => {
+    try {
+      const { data, error } = await supabase
+        .from("user_addresses")
+        .update({
+          recipient_name: addressData.recipient_name,
+          phone: addressData.phone,
+          address_line1: addressData.address_line1,
+          address_line2: addressData.address_line2,
+          postal_code: addressData.postal_code,
+          is_default: addressData.is_default,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", addressId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("주소 수정 실패:", error);
+      throw error;
+    }
+  },
+
+  // 주소 삭제
+  deleteAddress: async (addressId) => {
+    try {
+      const { error } = await supabase.from("user_addresses").delete().eq("id", addressId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error("주소 삭제 실패:", error);
+      throw error;
+    }
+  },
+};
+
 // 헬퍼 함수들
 export const supabaseService = {
   // 상품 관련

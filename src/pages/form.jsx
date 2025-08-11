@@ -42,7 +42,7 @@ const tossUrl = `supertoss://send?bank=${encodeURIComponent(accountInfo.bank)}&a
   accountInfo.accountNumber
 }&origin=${encodeURIComponent(accountInfo.tossOrigin)}`;
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB (서버와 동일한 제한으로 완화)
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/heic", "image/heif"];
 
 const FormPage = () => {
@@ -120,7 +120,7 @@ const FormPage = () => {
     if (error.includes("storage/object-too-large")) {
       return {
         title: "파일 크기 초과",
-        message: "이미지 크기가 너무 큽니다. 더 작은 크기의 이미지를 선택해주세요. (최대 5MB)",
+        message: "이미지 크기가 너무 큽니다. 더 작은 크기의 이미지를 선택해주세요. (최대 50MB)",
         contact: false,
       };
     }
@@ -140,14 +140,38 @@ const FormPage = () => {
     if (file.size > MAX_FILE_SIZE) {
       return `파일 크기가 너무 큽니다. (현재: ${(file.size / 1024 / 1024).toFixed(
         1
-      )}MB, 최대: 5MB)`;
+      )}MB, 최대: 50MB)`;
     }
     return null;
   };
 
-  // 이미지 리사이즈
-  const resizeImage = async (file) => {
-    return new Promise((resolve) => {
+  // HEIC/HEIF를 JPEG로 변환 (브라우저 지원이 불안정해 사전 변환)
+  const convertHeicIfNeeded = async (file) => {
+    if (file && (file.type === "image/heic" || file.type === "image/heif")) {
+      try {
+        const heic2any = (await import("heic2any")).default;
+        const resultBlob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
+        const converted = new File([resultBlob], file.name.replace(/\.(heic|heif)$/i, ".jpg"), {
+          type: "image/jpeg",
+          lastModified: Date.now(),
+        });
+        return converted;
+      } catch (e) {
+        console.error("HEIC 변환 실패", e);
+        throw new Error("HEIC 이미지를 변환할 수 없습니다. JPG/PNG로 변환 후 다시 시도해주세요.");
+      }
+    }
+    return file;
+  };
+
+  // 이미지 리사이즈 + 목표 용량까지 품질 조정
+  const compressImageToTarget = async (
+    file,
+    maxWidth = 1600,
+    maxHeight = 1600,
+    targetMaxBytes = 4 * 1024 * 1024
+  ) => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
@@ -156,42 +180,45 @@ const FormPage = () => {
           let width = img.width;
           let height = img.height;
 
-          // 최대 크기 설정
-          const MAX_WIDTH = 1200;
-          const MAX_HEIGHT = 1200;
-
-          if (width > height) {
-            if (width > MAX_WIDTH) {
-              height *= MAX_WIDTH / width;
-              width = MAX_WIDTH;
-            }
-          } else {
-            if (height > MAX_HEIGHT) {
-              width *= MAX_HEIGHT / height;
-              height = MAX_HEIGHT;
-            }
-          }
+          const ratio = Math.min(maxWidth / width, maxHeight / height, 1);
+          width = Math.floor(width * ratio);
+          height = Math.floor(height * ratio);
 
           canvas.width = width;
           canvas.height = height;
-
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, width, height);
 
-          canvas.toBlob(
-            (blob) => {
-              const resizedFile = new File([blob], file.name, {
-                type: "image/jpeg",
-                lastModified: Date.now(),
-              });
-              resolve(resizedFile);
-            },
-            "image/jpeg",
-            0.8
-          );
+          let quality = 0.8;
+          const exportBlob = () => {
+            canvas.toBlob(
+              (blob) => {
+                if (!blob) return reject(new Error("이미지 압축 실패"));
+                if (blob.size <= targetMaxBytes || quality <= 0.4) {
+                  const compressedFile = new File(
+                    [blob],
+                    file.name.replace(/\.(heic|heif)$/i, ".jpg"),
+                    {
+                      type: "image/jpeg",
+                      lastModified: Date.now(),
+                    }
+                  );
+                  resolve(compressedFile);
+                } else {
+                  quality -= 0.1;
+                  exportBlob();
+                }
+              },
+              "image/jpeg",
+              quality
+            );
+          };
+          exportBlob();
         };
+        img.onerror = () => reject(new Error("이미지를 불러올 수 없습니다."));
         img.src = e.target.result;
       };
+      reader.onerror = () => reject(new Error("이미지를 읽을 수 없습니다."));
       reader.readAsDataURL(file);
     });
   };
@@ -211,8 +238,9 @@ const FormPage = () => {
         }
 
         try {
-          // 이미지 리사이즈
-          const resizedFile = await resizeImage(file);
+          // HEIC/HEIF → JPEG 변환 후 압축/리사이즈 진행
+          const normalized = await convertHeicIfNeeded(file);
+          const resizedFile = await compressImageToTarget(normalized, 1600, 1600, 4 * 1024 * 1024);
           // 미리보기 URL 생성
           resizedFile.preview = URL.createObjectURL(resizedFile);
           newFiles.push(resizedFile);
@@ -498,6 +526,9 @@ const FormPage = () => {
               onChange={handleFileChange}
               className="form-control"
             />
+            <div style={{ color: "#666", fontSize: 12, marginTop: 6 }}>
+              최대 50MB 파일까지 선택 가능하며, 업로드 시 자동으로 용량을 최적화합니다. (권장: JPG)
+            </div>
             {errors.files && <div style={{ color: "red", fontSize: 13 }}>{errors.files}</div>}
             {form.files.length > 0 && (
               <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
