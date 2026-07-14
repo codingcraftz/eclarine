@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+@theme {
+  --color-gold: #b8a06a;
+  --color-gold-light: #eadfc2;
+  --color-gold-dark: #9a8552;
+  --color-ecru: #fafaf7;
+  --color-ink: #0a0a0a;
+
+  --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui,
+    sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background-color: var(--color-ecru);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+    line-height: 1.65;
+  }
+}
+
+/* ── 골드 그라디언트가 흐르는 텍스트 ── */
+@keyframes pay-sheen {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+.pay-sheen {
+  background: linear-gradient(
+    100deg,
+    #9a8552 0%,
+    #b8a06a 35%,
+    #eadfc2 50%,
+    #b8a06a 65%,
+    #9a8552 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: pay-sheen 3s linear infinite;
+}
+
+@keyframes pay-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+.pay-float {
+  animation: pay-float 3.2s ease-in-out infinite;
+}
+
+@keyframes pay-bar {
+  0% {
+    left: -45%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+.pay-bar > span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, #b8a06a, transparent);
+  animation: pay-bar 1.25s ease-in-out infinite;
+}
+
+@keyframes pay-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.pay-fade {
+  animation: pay-fade-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.pay-input {
+  width: 100%;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1a1a1a;
+  background: #fafaf7;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 0.75rem;
+  padding: 0.8rem 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.pay-input:focus {
+  border-color: #b8a06a;
+}
+.pay-input::placeholder {
+  color: #b5b5ae;
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.sheet-up {
+  animation: sheet-up 0.36s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 이미지 로드 전 스켈레톤 */
+@keyframes ecla-shimmer {
+  0% {
+    background-position: -150% 0;
+  }
+  100% {
+    background-position: 150% 0;
+  }
+}
+.ecla-shimmer {
+  background: linear-gradient(100deg, #f1eee6 28%, #fbf8f1 50%, #f1eee6 72%);
+  background-size: 220% 100%;
+  animation: ecla-shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes ecla-spin {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.12);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+.ecla-spin {
+  animation: ecla-spin 1.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
