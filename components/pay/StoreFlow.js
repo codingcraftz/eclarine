@@ -23,8 +23,7 @@ export default function StoreFlow({ products, preselectedId, account, tossClient
   const single = Boolean(preselectedId);
   const preselected = preselectedId ? products.find((p) => p.id === preselectedId) : null;
 
-  const [step, setStep] = useState('loading'); // loading|greeting|pick|detail|method|info|cash|card|done
-  const [greetPhase, setGreetPhase] = useState(0);
+  const [step, setStep] = useState('loading'); // loading|pick|detail|method|info|cash|card|done
   const [product, setProduct] = useState(preselected || null);
   const [cart, setCart] = useState([]); // [{optionId, qty}]
   const [method, setMethod] = useState(null); // 'cash'|'card'
@@ -48,20 +47,10 @@ export default function StoreFlow({ products, preselectedId, account, tossClient
   };
 
   useEffect(() => {
-    const t = setTimeout(() => setStep('greeting'), 1700);
-    return () => clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
-    if (step !== 'greeting') return;
     const next = single && product ? 'detail' : 'pick';
-    const timers = [
-      setTimeout(() => setGreetPhase(1), 1200),
-      setTimeout(() => setGreetPhase(2), 2600),
-      setTimeout(() => setStep(next), 5400),
-    ];
-    return () => timers.forEach(clearTimeout);
-  }, [step, single, product]);
+    const t = setTimeout(() => setStep(next), 800);
+    return () => clearTimeout(t);
+  }, [single, product]);
 
   const openPostcode = () => {
     if (typeof window === 'undefined' || !window.daum?.Postcode) {
@@ -184,30 +173,6 @@ export default function StoreFlow({ products, preselectedId, account, tossClient
           <div className="pay-bar relative w-40 h-[3px] rounded-full bg-black/[0.06] overflow-hidden">
             <span />
           </div>
-        </div>
-      )}
-
-      {/* GREETING */}
-      {step === 'greeting' && (
-        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-          <div className="pay-fade flex flex-col items-center">
-            <div className="pay-float mb-5" style={{ color: GOLD }}>
-              <EclaMark size={40} />
-            </div>
-            <div className="font-[family-name:var(--font-jakarta)] text-[12px] tracking-[0.42em] uppercase text-[#9A9A95] mb-3">
-              ÉCLARINE
-            </div>
-            <div className="pay-sheen text-[26px] font-extrabold tracking-[-0.01em] mb-1">당신을 더 빛나게</div>
-            <div className="text-[15px] font-bold tracking-[0.05em] text-[#1A1A1A]">{BRAND}</div>
-          </div>
-          {greetPhase >= 1 && (
-            <p className="pay-fade mt-10 text-[17px] font-semibold text-[#1A1A1A]">
-              안녕하세요, {BRAND}입니다 <span style={{ color: GOLD }}>:)</span>
-            </p>
-          )}
-          {greetPhase >= 2 && (
-            <p className="pay-fade mt-2 text-[15px] text-[#8A8A8A]">오늘 더 빛날 당신을 위해 — 천천히 둘러보세요 :)</p>
-          )}
         </div>
       )}
 
