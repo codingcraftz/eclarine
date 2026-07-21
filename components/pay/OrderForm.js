@@ -10,6 +10,18 @@ import { BRAND, formatKRW, tossSendUrl } from '@/lib/pricing';
 const MAX_FILES = 10;
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const TARGET_BYTES = 4 * 1024 * 1024;
+const MAX_AMOUNT = 9_999_999;
+
+// 방송 금액은 만원 단위로 불러주는 일이 많아 큰 자리부터 눌러 쌓게 한다
+const QUICK_AMOUNTS = [
+  { label: '+10만', value: 100000 },
+  { label: '+5만', value: 50000 },
+  { label: '+1만', value: 10000 },
+  { label: '+1천', value: 1000 },
+];
+
+const onlyDigits = (s) => String(s).replace(/\D/g, '');
+const withComma = (s) => (s ? Number(s).toLocaleString('ko-KR') : '');
 
 // 휴대폰 번호 하이픈 자동 (010-0000-0000)
 function formatPhone(s) {
@@ -309,16 +321,39 @@ export default function OrderForm({ account, kakaoChannel }) {
 
           <Field label="금액" required>
             <input
-              value={amount}
-              onChange={(e) => setAmount(e.target.value.replace(/\D/g, '').slice(0, 9))}
+              value={withComma(amount)}
+              onChange={(e) => setAmount(String(Math.min(Number(onlyDigits(e.target.value)), MAX_AMOUNT)))}
               inputMode="numeric"
               placeholder="방송에서 안내받으신 금액"
               className="pay-input"
             />
+            <div className="mt-2 grid grid-cols-4 gap-2">
+              {QUICK_AMOUNTS.map((q) => (
+                <button
+                  key={q.value}
+                  type="button"
+                  onClick={() =>
+                    setAmount((prev) => String(Math.min(Number(prev || 0) + q.value, MAX_AMOUNT)))
+                  }
+                  className="rounded-xl border border-black/[0.12] bg-white py-2.5 text-[13.5px] font-bold text-[#1A1A1A] active:scale-[0.97] transition-transform"
+                >
+                  {q.label}
+                </button>
+              ))}
+            </div>
             {Number(amount) > 0 && (
-              <p className="mt-1.5 text-[13px] font-bold" style={{ color: GOLD }}>
-                {formatKRW(Number(amount))}
-              </p>
+              <div className="mt-2 flex items-baseline justify-between">
+                <span className="text-[14px] font-extrabold" style={{ color: GOLD }}>
+                  {formatKRW(Number(amount))}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setAmount('')}
+                  className="text-[12.5px] font-semibold text-[#B5B5AE]"
+                >
+                  지우기
+                </button>
+              </div>
             )}
           </Field>
 
