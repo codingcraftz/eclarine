@@ -22,10 +22,13 @@ export const metadata = {
   },
 };
 
+// 크림+골드 팔레트 전용이라 브라우저 자동 다크 변환(force dark)을 끈다.
+// 선언이 없으면 반투명·그라디언트가 뒤집혀 로딩바와 계좌 카드가 깨진다.
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: '#FAFAF7',
+  colorScheme: 'light',
 };
 
 export default function RootLayout({ children }) {
