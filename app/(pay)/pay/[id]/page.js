@@ -1,5 +1,5 @@
 import { ACCOUNT, BRAND } from '@/lib/pricing';
-import { productById } from '@/lib/orders';
+import { productById } from '@/lib/products';
 import StoreFlow from '@/components/pay/StoreFlow';
 
 export const dynamic = 'force-dynamic';
